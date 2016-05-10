@@ -28,6 +28,8 @@ void main()                                  // Main function
   
   text_size(SMALL);
   oledprint("IR Send");
+  cursor(0, 3);
+  oledprint("%s", MY_NAME);
   cursor(0, 4);
   oledprint("P17 to CHECK-IN");
   
@@ -40,7 +42,7 @@ void main()                                  // Main function
       case 0b0100000:
         irclear();
         listen();
-        sendBeacon();
+        rgbs(OFF, OFF);
         break;
         
       case 0b0000100:                         // P25 Pressed - upload all contacts
@@ -50,8 +52,10 @@ void main()                                  // Main function
         oledprint("Done");
         pause(250);
         clear();
-        oledprint("IR Send");
         text_size(SMALL);
+        oledprint("IR Send");
+        cursor(0, 3);
+        oledprint("%s", MY_NAME);
         cursor(0, 4);
         oledprint("P17 to CHECK-IN");
         break;    
@@ -74,15 +78,19 @@ void main()                                  // Main function
           oledprint("Done!");
           pause(250);
           clear();
-          oledprint("IR Send");
           text_size(SMALL);
+          oledprint("IR Send");
+          cursor(0, 3);
+          oledprint("%s", MY_NAME);
           cursor(0, 4);
           oledprint("P17 to CHECK-IN");        }          
         else                                   // No, don't erase
         {
           clear();
-          oledprint("IR Send");
           text_size(SMALL);
+          oledprint("IR Send");
+          cursor(0, 3);
+          oledprint("%s", MY_NAME);
           cursor(0, 4);
           oledprint("P17 to CHECK-IN");
           pause(250);
@@ -116,13 +124,14 @@ void listen() {
        pause(500);
        clear();
        oledprint("IR Send");
+       cursor(0, 3);
+       oledprint("%s", MY_NAME);
        text_size(SMALL);
        cursor(0, 4);
        oledprint("P17 to CHECK-IN");
        break;
     }
     pause(50);   
-    
     rgbs(OFF, OFF);   
   }
   rgbs(OFF, OFF);    
@@ -130,10 +139,10 @@ void listen() {
 
 
 void sendBeacon() {
-  for(int i = 0; i < 5; i++) {
+  for(int i = 0; i < 2; i++) {
     rgbs(RED, RED);
     irprint("%d\n%16s\n", MY_ID, MY_NAME);
-    pause(200);
+    pause(100);
     rgbs(OFF, OFF);
   }    
 } 

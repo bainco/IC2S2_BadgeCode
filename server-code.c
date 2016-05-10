@@ -12,7 +12,7 @@ int MEM_START_ADDRESS = 33534;
 short MY_LOCATION_ID = 1;
 
 short recentID = 15;
-  
+
 short theirID;
 char theirName[16];
 
@@ -21,15 +21,15 @@ int states;
 void storeCount(short count);
 short retrieveCount(); // Actually returns the count. No referencing.
 
-int storeContact(int addr, unsigned int timeVal, short idVal);
+int storeContact(unsigned int timeVal, short idVal);
 int retrieveContact(int addr, unsigned int *timeVal, short *idVal);
 
 void print_all_contacts();
 
 void sendBeacon(unsigned int et);
-void listen(unsigned int et, unsigned int currentAddress);
+void listen(unsigned int et);
 
-void listen(unsigned int et, unsigned int currentAddress) {
+void listen(unsigned int et) {
 
      memset(&theirID, 0, sizeof(theirID));        // Clear their variables
      memset(&theirName, 0, sizeof(theirName));        // Clear their variables
@@ -37,50 +37,47 @@ void listen(unsigned int et, unsigned int currentAddress) {
 
      //rgbs(GREEN, GREEN);                          // Signal transmitting
      irscan("%d%16s", &theirID, &theirName);
-     
+
      if(strlen(theirName) > 0) {
-      
+
        print("Heard from... id: %d ", theirID);
        print("name: %16s\n", theirName);
-       
+
        if(theirID != recentID) {
         recentID = theirID;
-        
-        storeContact(currentAddress, et, theirID); 
-        
+
+        storeContact(et, theirID);
+
         print("Saving... timestamp: %d, id: %d\n", et, theirID);
-        
+
         rgbs(CYAN, CYAN);
         clear();
-        oledprint("Welcome  %s", theirName); 
+        oledprint("Welcome  %s", theirName);
         pause(500);
         clear();
         oledprint("Keynote Check-in");
        }
-       
-     }       
-     rgbs(OFF, OFF);                          // Signal transmittingå
-}  
 
-void sendBeacon(unsigned int et) {
-  
-  // rgbs(RED, RED);                          // Signal transmitting
-   irprint("%d\n%d\n", et, MY_LOCATION_ID); // Transmit epoch time
-   rgbs(OFF, OFF);                          // Finish transmitting   
+     }
+     rgbs(OFF, OFF);                          // Signal transmittingå
 }
 
-void main() 
+void sendBeacon(unsigned int et) {
+
+  // rgbs(RED, RED);                          // Signal transmitting
+   irprint("%d\n%d\n", et, MY_LOCATION_ID); // Transmit epoch time
+   rgbs(OFF, OFF);                          // Finish transmitting
+}
+
+void main()
 {
   badge_setup();
   text_size(LARGE);
   oledprint("Keynote Check-in");
-  dt_run(dt);                                  // Use to start system timer
-  
-  short currentCount = retrieveCount();
-  
-  unsigned int currentAddress = MEM_START_ADDRESS + (currentCount * 6);
-  
-  while (1) {    
+  dt_run(dt); 
+  rgbs(OFF, OFF);                                 // Use to start system timer
+
+  while (1) {
     states = buttons();
     switch(states)                            // Handle button press
     {
@@ -90,6 +87,7 @@ void main()
         print_all_contacts();
         oledprint("Done");
         pause(250);
+        clear();
         oledprint("Keynote Check-in");
         continue;                             // Back to while(1)
       case 0b1000000:                         // OSH pressed, erase EEPROM
@@ -111,62 +109,63 @@ void main()
           pause(250);
           clear();
           oledprint("Keynote Check-in");
-        }          
+        }
         else                                   // No, don't erase
         {
           clear();
           oledprint("Keynote Check-in");
           pause(250);
-        }   
-        ;                               // Continue through while(1)  
+        }
+        break;                               // Continue through while(1)
       default:
-        ;                               // Continue through while(1)
+        break;                               // Continue through while(1)
     }
-    
-    dt = dt_get(); 
+
+    dt = dt_get();
     et = dt_toEt(dt); // Convert from date time to epoch time
     irclear();
     sendBeacon(et);
     pause(50);
-    dt = dt_get(); 
-    listen(et, currentAddress);  
-  }    
-}  
-
+    listen(et);
+  }
+}
 
 void print_all_contacts() {
-  
+
   short currentCount = retrieveCount();
-  
+
   unsigned int t;
   short id;
   int address = MEM_START_ADDRESS;
-  
+
   for(int i = 0; i < currentCount; i++)
   {
     address = retrieveContact(address, &t, &id);
     print("%d, %d\n", t, id);
   }
-}  
+}
 
 void storeCount(short count) {
   ee_writeShort(count, COUNTADDRESS);
 }
 
 short retrieveCount() {
-  
+
   short returnValue = ee_readShort(COUNTADDRESS);
-  
   // If count is unitialized, set it to 0
   if (returnValue == -1) {
     storeCount(0);
     returnValue = 0;
-  }    
+  }
   return returnValue;
-}    
+}
 
-int storeContact(int addr, unsigned int timeVal, short idVal)
+int storeContact(unsigned int timeVal, short idVal)
 {
+
+   short currentCount = retrieveCount();
+   unsigned int addr = MEM_START_ADDRESS + (currentCount * 6);
+
   if(addr < (65536 - 6))
   {
     ee_writeInt(timeVal, addr);
@@ -179,7 +178,7 @@ int storeContact(int addr, unsigned int timeVal, short idVal)
     short newCount = retrieveCount() + 1;
     storeCount(newCount);
     print("Current Contact Count: %d\n", newCount);
-    
+
     //print("Contacts left = %d\n", memRemaining);
   }
   else
