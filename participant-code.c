@@ -1,8 +1,8 @@
 #include "simpletools.h"                     // Include simpletools library
 #include "badgetools.h"                      // Include badgetools library  
 
-short MY_ID = 1;
-char MY_NAME[16] = "CONNOR";
+short MY_ID = 128;
+char MY_NAME[16] = "IRONMAN";
 
 unsigned int COUNTADDRESS = 33532;
 unsigned int MEM_START_ADDRESS = 33534;
@@ -109,7 +109,7 @@ void listen() {
     memset(&theirID, 0, sizeof(theirID));        // Clear their variables
     memset(&theirTime, 0, sizeof(theirTime));
     
-    irscan("%d%d", &theirID, &theirTime);
+    irscan("%d%d", &theirTime, &theirID);
     
     if(theirID > 0) {
        rgbs(CYAN, CYAN);
@@ -139,7 +139,7 @@ void listen() {
 
 
 void sendBeacon() {
-  for(int i = 0; i < 2; i++) {
+  for(int i = 0; i < 5; i++) {
     rgbs(RED, RED);
     irprint("%d\n%16s\n", MY_ID, MY_NAME);
     pause(100);

@@ -9,9 +9,9 @@ unsigned int et;
 int COUNTADDRESS = 33532;
 int MEM_START_ADDRESS = 33534;
 
-short MY_LOCATION_ID = 1;
+short MY_LOCATION_ID = 2;
 
-short recentID = 15;
+short recentID = 0;
 
 short theirID;
 char theirName[16];
