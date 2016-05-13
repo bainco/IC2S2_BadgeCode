@@ -1,13 +1,16 @@
 #include "simpletools.h"
 #include "badgetools.h"
+#include "sound.h"
 #include "datetime.h"                         // Include datetime library
 
-
+sound *audio;                                 // Pointer for audio process
 datetime dt = {2016, 5, 10, 5, 5, 00};  // Set up the date/time
 unsigned int et;
 
 int COUNTADDRESS = 33532;
 int MEM_START_ADDRESS = 33534;
+
+short TIME_WIZARD_ID = 59999;
 
 short MY_LOCATION_ID = 2;
 
@@ -39,11 +42,14 @@ void listen(unsigned int et) {
      irscan("%d%16s", &theirID, &theirName);
 
      if(strlen(theirName) > 0) {
-
        print("Heard from... id: %d ", theirID);
        print("name: %16s\n", theirName);
 
-       if(theirID != recentID) {
+       if (theirID == TIME_WIZARD_ID) {
+          # STUB
+       }
+
+       else if(theirID != recentID) {
         recentID = theirID;
 
         storeContact(et, theirID);
@@ -53,11 +59,28 @@ void listen(unsigned int et) {
         rgbs(CYAN, CYAN);
         clear();
         oledprint("Welcome  %s", theirName);
+
+        sound_note(audio, 0, E5);                    // Play first note with ch 0
         pause(500);
+        sound_note(audio, 0, C5);                    // Play first note with ch 0
+        pause(500);
+        sound_note(audio, 0, 0);                    // Play first note with ch 0
+        pause(500);
+
         clear();
         oledprint("Keynote Check-in");
        }
-
+       else {
+          rgbs(YELLOW, YELLOW);
+          clear();
+          oledprint("Already recorded %s", theirName);
+          sound_note(audio, 0, E5);                    // Play first note with ch 0
+          pause(500);
+          sound_note(audio, 0, 0);                    // Play first note with ch 0
+          pause(1000);
+          clear();
+          oledprint("Keynote Check-in");
+       }
      }
      rgbs(OFF, OFF);                          // Signal transmittingå
 }
@@ -74,7 +97,12 @@ void main()
   badge_setup();
   text_size(LARGE);
   oledprint("Keynote Check-in");
-  dt_run(dt); 
+  dt_run(dt);
+
+
+  audio = sound_run(9, 10);                   // Run sound, get audio pointer
+  sound_volume(audio, 0, 100);                 // Set channel volumes
+
   rgbs(OFF, OFF);                                 // Use to start system timer
 
   while (1) {
