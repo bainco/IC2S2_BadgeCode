@@ -1,5 +1,5 @@
 #include "simpletools.h"                     // Include simpletools library
-#include "badgetools.h"                      // Include badgetools library  
+#include "badgetools.h"                      // Include badgetools library
 
 short MY_ID = 128;
 char MY_NAME[16] = "IRONMAN";
@@ -10,6 +10,7 @@ unsigned int MEM_START_ADDRESS = 33534;
 short theirID;
 unsigned int theirTime;
 
+int LISTEN_TIMEOUT = 10000;
 void sendBeacon();
 void listen();
 
@@ -25,18 +26,18 @@ void print_all_contacts();
 void main()                                  // Main function
 {
   badge_setup();                             // Call badge setup
-  
+
   text_size(SMALL);
   oledprint("IR Send");
   cursor(0, 3);
   oledprint("%s", MY_NAME);
   cursor(0, 4);
   oledprint("P17 to CHECK-IN");
-  
+
   while(1)
   {
     int states = buttons();
-       
+
     switch(states)
     {
       case 0b0100000:
@@ -44,7 +45,7 @@ void main()                                  // Main function
         listen();
         rgbs(OFF, OFF);
         break;
-        
+
       case 0b0000100:                         // P25 Pressed - upload all contacts
         clear();
         oledprint("Upload  to      computer");
@@ -58,8 +59,8 @@ void main()                                  // Main function
         oledprint("%s", MY_NAME);
         cursor(0, 4);
         oledprint("P17 to CHECK-IN");
-        break;    
-        
+        break;
+
        case 0b1000000:                         // OSH pressed, erase EEPROM
         clear();
         oledprint("CONFIRM");
@@ -83,7 +84,7 @@ void main()                                  // Main function
           cursor(0, 3);
           oledprint("%s", MY_NAME);
           cursor(0, 4);
-          oledprint("P17 to CHECK-IN");        }          
+          oledprint("P17 to CHECK-IN");        }
         else                                   // No, don't erase
         {
           clear();
@@ -94,32 +95,33 @@ void main()                                  // Main function
           cursor(0, 4);
           oledprint("P17 to CHECK-IN");
           pause(250);
-        } 
+        }
         break;
-        
+
        default:
-        break; 
-    }          
-  }      
-}  
+        break;
+    }
+  }
+}
 
 void listen() {
- while(1) { 
+   int i = 0;
+ while(i < LISTEN_TIMEOUT) {
     rgbs(GREEN, GREEN);
     memset(&theirID, 0, sizeof(theirID));        // Clear their variables
     memset(&theirTime, 0, sizeof(theirTime));
-    
+
     irscan("%d%d", &theirTime, &theirID);
-    
+
     if(theirID > 0) {
        rgbs(CYAN, CYAN);
        print("Heard from... id: %d ,", theirID);
-       print("time: %d\n", theirTime); 
-       
+       print("time: %d\n", theirTime);
+
        clear();
-       
+
        oledprint("Check-in at %d");
-       storeContact(theirTime, theirID); 
+       storeContact(theirTime, theirID);
        sendBeacon();
        pause(500);
        clear();
@@ -131,11 +133,13 @@ void listen() {
        oledprint("P17 to CHECK-IN");
        break;
     }
-    pause(50);   
-    rgbs(OFF, OFF);   
+    pause(50);
+    rgbs(OFF, OFF);
+
+    i += 1;
   }
-  rgbs(OFF, OFF);    
-}  
+  rgbs(OFF, OFF);
+}
 
 
 void sendBeacon() {
@@ -144,50 +148,50 @@ void sendBeacon() {
     irprint("%d\n%16s\n", MY_ID, MY_NAME);
     pause(100);
     rgbs(OFF, OFF);
-  }    
-} 
+  }
+}
 
 void print_all_contacts() {
-  
+
   short currentCount = retrieveCount();
-  
+
   print("Current Contact Count: %d\n", currentCount);
 
   unsigned int t;
   short id;
   int address = MEM_START_ADDRESS;
-  
+
   for(int i = 0; i < currentCount; i++)
   {
     address = retrieveContact(address, &t, &id);
     print("%d, %d\n", t, id);
   }
-}  
+}
 
 void storeCount(short count) {
   ee_writeShort(count, COUNTADDRESS);
 }
 
 short retrieveCount() {
-  
+
   short returnValue = ee_readShort(COUNTADDRESS);
-  
+
   // If count is unitialized, set it to 0
   if (returnValue == -1) {
     storeCount(0);
     returnValue = 0;
-  }    
+  }
   return returnValue;
-}    
+}
 
 int storeContact(unsigned int timeVal, short idVal)
 {
-  
+
   short currentCount = retrieveCount();
-  
+
   unsigned int addr = MEM_START_ADDRESS + (currentCount * 6);
 
-  
+
   if(addr < (65536 - 6))
   {
     ee_writeInt(timeVal, addr);
@@ -200,7 +204,7 @@ int storeContact(unsigned int timeVal, short idVal)
     short newCount = retrieveCount() + 1;
     storeCount(newCount);
     print("Current Contact Count: %d\n", newCount);
-    
+
     //print("Contacts left = %d\n", memRemaining);
   }
   else
@@ -227,4 +231,4 @@ int retrieveContact(int addr, unsigned int *timeVal, short *idVal)
     oledprint("Wrong address!\n");
   }
   return addr;
-} 
+}
