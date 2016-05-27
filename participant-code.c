@@ -1,8 +1,21 @@
+/**
+
+Policy is to clear at the beginning of any display command.
+
+Anything that just posts a screen should start with "Display"
+
+Anything that is the direct result of a button press should start with that button (i.e. P17_Check_in)
+
+Waits are used before a helper method
+*/
+
 #include "simpletools.h"                     // Include simpletools library
 #include "badgetools.h"                      // Include badgetools library
 
 short MY_ID = 128;
 char MY_NAME[16] = "IRONMAN";
+
+char MY_ANSWERS[8] ="ABCDEFGH"
 
 unsigned int COUNTADDRESS = 33532;
 unsigned int MEM_START_ADDRESS = 33534;
@@ -22,80 +35,45 @@ int retrieveContact(int addr, unsigned int *timeVal, short *idVal);
 
 void print_all_contacts();
 
+void P25_Upload_Contacts();
+void All_OSH_Erase_EEPROM();
+void P17_Check_In();
+
+
+void Display_Main_Menu();
+
+void Display_Main_Menu() {
+   clear();
+   text_size(SMALL);
+   oledprint("IR Send");
+   cursor(0, 3);
+   oledprint("%s", MY_NAME);
+   cursor(0, 4);
+   oledprint("P17 to CHECK-IN");
+}
 
 void main()                                  // Main function
 {
   badge_setup();                             // Call badge setup
 
-  text_size(SMALL);
-  oledprint("IR Send");
-  cursor(0, 3);
-  oledprint("%s", MY_NAME);
-  cursor(0, 4);
-  oledprint("P17 to CHECK-IN");
+  Display_Main_Menu();
 
+  // Main loop for button pressing
   while(1)
   {
     int states = buttons();
-
     switch(states)
     {
       case 0b0100000:
-        irclear();
-        listen();
-        rgbs(OFF, OFF);
+        P17_Check_In();
         break;
 
-      case 0b0000100:                         // P25 Pressed - upload all contacts
-        clear();
-        oledprint("Upload  to      computer");
-        print_all_contacts();
-        oledprint("Done");
-        pause(250);
-        clear();
-        text_size(SMALL);
-        oledprint("IR Send");
-        cursor(0, 3);
-        oledprint("%s", MY_NAME);
-        cursor(0, 4);
-        oledprint("P17 to CHECK-IN");
+      case 0b0000100:                          // P25 Pressed - upload all contacts
+        P25_Upload_Contacts();
         break;
 
-       case 0b1000000:                         // OSH pressed, erase EEPROM
-        clear();
-        oledprint("CONFIRM");
-        pause(500);
-        text_size(SMALL);
-        cursor(0, 4);
-        oledprint("Yes-OSH\n\n");
-        oledprint("No-Any other btn");
-        while(!(states = buttons()));         // Get confirmation
-        if(states == 0b1000000)               // Yes, erase
-        {
-          text_size(LARGE);
-          clear();
-          oledprint("Wait 20s...");
-          contacts_eraseAll();
-          oledprint("Done!");
-          pause(250);
-          clear();
-          text_size(SMALL);
-          oledprint("IR Send");
-          cursor(0, 3);
-          oledprint("%s", MY_NAME);
-          cursor(0, 4);
-          oledprint("P17 to CHECK-IN");        }
-        else                                   // No, don't erase
-        {
-          clear();
-          text_size(SMALL);
-          oledprint("IR Send");
-          cursor(0, 3);
-          oledprint("%s", MY_NAME);
-          cursor(0, 4);
-          oledprint("P17 to CHECK-IN");
-          pause(250);
-        }
+       case 0b1111111:                         // OSH pressed, erase EEPROM
+        All_OSH_Erase_EEPROM();
         break;
 
        default:
@@ -106,7 +84,7 @@ void main()                                  // Main function
 
 void listen() {
    int i = 0;
- while(i < LISTEN_TIMEOUT) {
+   while(i < LISTEN_TIMEOUT) {
     rgbs(GREEN, GREEN);
     memset(&theirID, 0, sizeof(theirID));        // Clear their variables
     memset(&theirTime, 0, sizeof(theirTime));
@@ -119,18 +97,12 @@ void listen() {
        print("time: %d\n", theirTime);
 
        clear();
-
        oledprint("Check-in at %d");
        storeContact(theirTime, theirID);
+
        sendBeacon();
        pause(500);
-       clear();
-       oledprint("IR Send");
-       cursor(0, 3);
-       oledprint("%s", MY_NAME);
-       text_size(SMALL);
-       cursor(0, 4);
-       oledprint("P17 to CHECK-IN");
+       Display_Main_Menu();
        break;
     }
     pause(50);
@@ -140,7 +112,6 @@ void listen() {
   }
   rgbs(OFF, OFF);
 }
-
 
 void sendBeacon() {
   for(int i = 0; i < 5; i++) {
@@ -173,9 +144,7 @@ void storeCount(short count) {
 }
 
 short retrieveCount() {
-
   short returnValue = ee_readShort(COUNTADDRESS);
-
   // If count is unitialized, set it to 0
   if (returnValue == -1) {
     storeCount(0);
@@ -184,14 +153,9 @@ short retrieveCount() {
   return returnValue;
 }
 
-int storeContact(unsigned int timeVal, short idVal)
-{
-
+int storeContact(unsigned int timeVal, short idVal) {
   short currentCount = retrieveCount();
-
   unsigned int addr = MEM_START_ADDRESS + (currentCount * 6);
-
-
   if(addr < (65536 - 6))
   {
     ee_writeInt(timeVal, addr);
@@ -231,4 +195,53 @@ int retrieveContact(int addr, unsigned int *timeVal, short *idVal)
     oledprint("Wrong address!\n");
   }
   return addr;
+}
+
+/***** BUTTON METHODS ******/
+void P17_Check_In() {
+   irclear();
+   listen();
+   rgbs(OFF, OFF);
+}
+
+void All_OSH_Erase_EEPROM() {
+
+  clear();
+  oledprint("CONFIRM");
+  pause(500);
+  text_size(SMALL);
+  cursor(0, 4);
+  oledprint("Yes-OSH\n\n");
+  oledprint("No-Any other btn");
+  while(!(states = buttons()));         // Get confirmation
+  if(states == 0b1000000)               // Yes, erase
+  {
+     text_size(LARGE);
+     clear();
+     oledprint("Wait 20s...");
+     contacts_eraseAll();
+     oledprint("Done!");
+     pause(250);
+     Display_Main_Menu();
+   }
+  else                                   // No, don't erase
+  {
+     pause(250);
+     Display_Main_Menu();
+  }
+}
+
+void P25_Upload_Contacts() {
+   clear();
+   oledprint("Upload  to      computer");
+   print_all_contacts();
+   oledprint("Done");
+   pause(250);
+   clear();
+   text_size(SMALL);
+   oledprint("IR Send");
+   cursor(0, 3);
+   oledprint("%s", MY_NAME);
+   cursor(0, 4);
+   oledprint("P17 to CHECK-IN");
 }
