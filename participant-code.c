@@ -11,21 +11,64 @@ Waits are used before a helper method
 
 #include "simpletools.h"                     // Include simpletools library
 #include "badgetools.h"                      // Include badgetools library
+#include "part_strings.h"
 
-short MY_ID = 128;
-char MY_NAME[16] = "IRONMAN";
 
-char MY_ANSWERS[8] ="ABCDEFGH"
+
+/*** GLOBALS ***/
+
+char SURVEY_Q[NUM_QUESTIONS][64] = {
+ "Which type of    fame would you   most prefer?",
+ "Which technology do you most look forward to?",
+ "In which TV show world would you  like to live for a year?",
+ "Which of the     following musicalgenres do you    prefer?"
+ };
+
+
+// DISPLAY IS 17 CHARS WIDE
+char SURVEY_Q_ANSWERS[NUM_QUESTIONS][NUM_ANSWERS][32] = {
+ {"A million YouTubefollowers",
+  "Having a TED talk",
+  "NY Times Cover",
+  "Late Show guest",
+  "None"
+ },
+ {"Self-driving cars",
+  "The robot butler",
+  "Interstellar     travel",
+  "Brain computer   interface",
+  "Virtual reality"
+ },
+ {"Mad Men",
+  "Game of Thrones",
+  "Downton Abbey",
+  "Breaking Bad",
+  "Star Trek"
+ },
+ {"Pop",
+  "Classical",
+  "Jazz",
+  "Rock",
+  "Musicals"
+ } 
+};  
+
+short MY_ID = 129;
+char MY_NAME[16] = "BATMAN";
+
+// THESE NEED TO BE THE INDICIES INTO THE ANSWER ARRAYS
+char MY_ANSWERS[NUM_QUESTIONS] = "abcd";
 
 unsigned int COUNTADDRESS = 33532;
 unsigned int MEM_START_ADDRESS = 33534;
 
 short theirID;
 unsigned int theirTime;
+char theirAnswers[NUM_QUESTIONS];
 
-int LISTEN_TIMEOUT = 10000;
+int LISTENFORSERVER_TIMEOUT = 10000;
 void sendBeacon();
-void listen();
+void listenForServer();
 
 void storeCount(short count);
 short retrieveCount(); // Actually returns the count. No referencing.
@@ -38,19 +81,9 @@ void print_all_contacts();
 void P25_Upload_Contacts();
 void All_OSH_Erase_EEPROM();
 void P17_Check_In();
-
+void P27_PartToPart();
 
 void Display_Main_Menu();
-
-void Display_Main_Menu() {
-   clear();
-   text_size(SMALL);
-   oledprint("IR Send");
-   cursor(0, 3);
-   oledprint("%s", MY_NAME);
-   cursor(0, 4);
-   oledprint("P17 to CHECK-IN");
-}
 
 void main()                                  // Main function
 {
@@ -72,7 +105,11 @@ void main()                                  // Main function
         P25_Upload_Contacts();
         break;
 
-       case 0b1111111:                         // OSH pressed, erase EEPROM
+      case 0b0000001:
+        P27_PartToPart();
+        break;
+
+      case 0b1111111:                         // OSH pressed, erase EEPROM
         All_OSH_Erase_EEPROM();
         break;
 
@@ -82,9 +119,9 @@ void main()                                  // Main function
   }
 }
 
-void listen() {
+void listenForServer() {
    int i = 0;
-   while(i < LISTEN_TIMEOUT) {
+   while(i < LISTENFORSERVER_TIMEOUT) {
     rgbs(GREEN, GREEN);
     memset(&theirID, 0, sizeof(theirID));        // Clear their variables
     memset(&theirTime, 0, sizeof(theirTime));
@@ -200,15 +237,94 @@ int retrieveContact(int addr, unsigned int *timeVal, short *idVal)
 /***** BUTTON METHODS ******/
 void P17_Check_In() {
    irclear();
-   listen();
+   listenForServer();
    rgbs(OFF, OFF);
 }
 
-void All_OSH_Erase_EEPROM() {
+void P27_PartToPart() {
+   clear()
 
+   int counter = 0;
+   int waitTime = 0;
+   int totalTime = 100;
+   char received = 0;
+   int irlenb = 0;
+   
+   memset(&theirAnswers, 0, sizeof(theirAnswers));
+
+   irclear();
+   for (int i = 0; i < (rand() % MY_ID); i++) {
+        waitTime = rand() % totalTime;
+        waitTime += 100;
+     }
+
+     counter = 0;
+     oledprint("Hold still!");
+     pause(1000);
+     rgbs(GREEN, GREEN);
+     while(counter < totalTime) {
+      //oledprint("Receiving");
+      if (counter == waitTime) {
+       clear();
+       //oledprint("Sending");
+       rgbs(RED, RED);
+       irprint("%s\n", MY_ANSWERS);
+       rgbs(OFF, OFF);
+      }
+      if(received == 0){       
+       irlenb = irscan("%s\n", &theirAnswers);
+       if (irlenb > 0) {
+        oledprint("Received");
+        rgbs(GREEN, GREEN);
+        received = 1;
+        irclear();
+       }
+      }
+       counter++;
+       pause(10);
+     }
+
+     rgbs(OFF, OFF);
+
+     if (received == 1) {
+
+      //  int y = accel(AY);                           // Get y tilt
+
+
+        // PICK RANDOM QUESTION
+        short randIndex = rand() % NUM_QUESTIONS;
+        while (MY_ANSWERS[randIndex] != theirAnswers[randIndex]) {
+           randIndex = rand() % NUM_QUESTIONS;
+        }
+        clear();
+        rotate180();
+
+        text_size(SMALL);
+        cursor(0, 4);
+        oledprint("You both answered...\n");
+        oledprint(SURVEY_Q_ANSWERS[randIndex][MY_ANSWERS[randIndex]]);
+        oledprint("to the question:");
+        oledprint(SURVEY_Q[randIndex]);
+
+        pause(5000);
+        /*
+        // PICK RANDOM DISCOMMON
+        short dissim_randIndex = random() % NUM_QUESTIONS
+        while(MY_ANSWERS[dissim_randIndex] == theirAnswers[dissim_randIndex]) {
+           dissim_randIndex = random() % NUM_QUESTIONS
+        }
+        */
+     }
+     pause(500);
+}
+
+void All_OSH_Erase_EEPROM() {
   clear();
   oledprint("CONFIRM");
   pause(500);
+
+  int states = buttons();
+
   text_size(SMALL);
   cursor(0, 4);
   oledprint("Yes-OSH\n\n");
@@ -237,6 +353,18 @@ void P25_Upload_Contacts() {
    print_all_contacts();
    oledprint("Done");
    pause(250);
+   clear();
+   text_size(SMALL);
+   oledprint("IR Send");
+   cursor(0, 3);
+   oledprint("%s", MY_NAME);
+   cursor(0, 4);
+   oledprint("P17 to CHECK-IN");
+}
+
+
+/**** DISPLAY METHODS ******/
+void Display_Main_Menu() {
    clear();
    text_size(SMALL);
    oledprint("IR Send");
