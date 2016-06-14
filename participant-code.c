@@ -1,5 +1,11 @@
 /**
 
+
+Staff IDs are below 1000
+Attendee IDS ARE IN THE 1000s
+Server IDs are in the 2000s
+ 
+
 Policy is to clear at the beginning of any display command.
 
 Anything that just posts a screen should start with "Display"
@@ -11,67 +17,29 @@ Waits are used before a helper method
 
 #include "simpletools.h"                     // Include simpletools library
 #include "badgetools.h"                      // Include badgetools library
+#include "eeprom.h"
+#include "survey.h"
 #include "part_strings.h"
-
-
 
 /*** GLOBALS ***/
 
-char SURVEY_Q[NUM_QUESTIONS][64] = {
- "Which type of    fame would you   most prefer?",
- "Which technology do you most look forward to?",
- "In which TV show world would you  like to live for a year?",
- "Which of the     following musicalgenres do you    prefer?"
- };
+unsigned int MyTime;
 
+unsigned short theirID;
+unsigned short theirAnswers[NUM_QUESTIONS];
 
-// DISPLAY IS 17 CHARS WIDE
-char SURVEY_Q_ANSWERS[NUM_QUESTIONS][NUM_ANSWERS][32] = {
- {"A million YouTubefollowers",
-  "Having a TED talk",
-  "NY Times Cover",
-  "Late Show guest",
-  "None"
- },
- {"Self-driving cars",
-  "The robot butler",
-  "Interstellar     travel",
-  "Brain computer   interface",
-  "Virtual reality"
- },
- {"Mad Men",
-  "Game of Thrones",
-  "Downton Abbey",
-  "Breaking Bad",
-  "Star Trek"
- },
- {"Pop",
-  "Classical",
-  "Jazz",
-  "Rock",
-  "Musicals"
- } 
-};  
-
-short MY_ID = 129;
-char MY_NAME[16] = "BATMAN";
-
-// THESE NEED TO BE THE INDICIES INTO THE ANSWER ARRAYS
-char MY_ANSWERS[NUM_QUESTIONS] = "abcd";
-
-unsigned int COUNTADDRESS = 33532;
-unsigned int MEM_START_ADDRESS = 33534;
-
-short theirID;
-unsigned int theirTime;
-char theirAnswers[NUM_QUESTIONS];
+unsigned int serverTime;
 
 int LISTENFORSERVER_TIMEOUT = 10000;
 void sendBeacon();
 void listenForServer();
 
-void storeCount(short count);
+void storeServerCount(short count);
+void storeUserCount(short count);
 short retrieveCount(); // Actually returns the count. No referencing.
+short retrieveUserCount(); // Actually returns the count. No referencing.
+short retrieveServerCount(); // Actually returns the count. No referencing.
+
 
 int storeContact(unsigned int timeVal, short idVal);
 int retrieveContact(int addr, unsigned int *timeVal, short *idVal);
@@ -84,17 +52,25 @@ void P17_Check_In();
 void P27_PartToPart();
 
 void Display_Main_Menu();
+void Display_Private_SumStats(unsigned int *y);
 
 void main()                                  // Main function
 {
   badge_setup();                             // Call badge setup
 
-  Display_Main_Menu();
 
+  // STUB STUB STUB
+  MyTime = 0; //INITIALIZE TIME
+
+  Display_Main_Menu();
+  
+  int states;
+  int y;
   // Main loop for button pressing
   while(1)
   {
-    int states = buttons();
+    states = buttons();
+    y = accel(AY);
     switch(states)
     {
       case 0b0100000:
@@ -114,124 +90,13 @@ void main()                                  // Main function
         break;
 
        default:
+        if (y < -40) {
+          Display_Private_SumStats(&y);
+        }
+
         break;
     }
   }
-}
-
-void listenForServer() {
-   int i = 0;
-   while(i < LISTENFORSERVER_TIMEOUT) {
-    rgbs(GREEN, GREEN);
-    memset(&theirID, 0, sizeof(theirID));        // Clear their variables
-    memset(&theirTime, 0, sizeof(theirTime));
-
-    irscan("%d%d", &theirTime, &theirID);
-
-    if(theirID > 0) {
-       rgbs(CYAN, CYAN);
-       print("Heard from... id: %d ,", theirID);
-       print("time: %d\n", theirTime);
-
-       clear();
-       oledprint("Check-in at %d");
-       storeContact(theirTime, theirID);
-
-       sendBeacon();
-       pause(500);
-       Display_Main_Menu();
-       break;
-    }
-    pause(50);
-    rgbs(OFF, OFF);
-
-    i += 1;
-  }
-  rgbs(OFF, OFF);
-}
-
-void sendBeacon() {
-  for(int i = 0; i < 5; i++) {
-    rgbs(RED, RED);
-    irprint("%d\n%16s\n", MY_ID, MY_NAME);
-    pause(100);
-    rgbs(OFF, OFF);
-  }
-}
-
-void print_all_contacts() {
-
-  short currentCount = retrieveCount();
-
-  print("Current Contact Count: %d\n", currentCount);
-
-  unsigned int t;
-  short id;
-  int address = MEM_START_ADDRESS;
-
-  for(int i = 0; i < currentCount; i++)
-  {
-    address = retrieveContact(address, &t, &id);
-    print("%d, %d\n", t, id);
-  }
-}
-
-void storeCount(short count) {
-  ee_writeShort(count, COUNTADDRESS);
-}
-
-short retrieveCount() {
-  short returnValue = ee_readShort(COUNTADDRESS);
-  // If count is unitialized, set it to 0
-  if (returnValue == -1) {
-    storeCount(0);
-    returnValue = 0;
-  }
-  return returnValue;
-}
-
-int storeContact(unsigned int timeVal, short idVal) {
-  short currentCount = retrieveCount();
-  unsigned int addr = MEM_START_ADDRESS + (currentCount * 6);
-  if(addr < (65536 - 6))
-  {
-    ee_writeInt(timeVal, addr);
-    addr += 4;
-    ee_writeShort(idVal, addr);
-    addr += 2;
-    int memRemaining = 65535 - (addr);
-    memRemaining /= 6;
-
-    short newCount = retrieveCount() + 1;
-    storeCount(newCount);
-    print("Current Contact Count: %d\n", newCount);
-
-    //print("Contacts left = %d\n", memRemaining);
-  }
-  else
-  {
-    print("Could not store, address too high!\n");
-  }
-  return addr;
-}
-
-int retrieveContact(int addr, unsigned int *timeVal, short *idVal)
-{
-  //print("addr = %d   ", addr);
-  if(addr < (65536 - 6))
-  {
-    *timeVal = ee_readInt(addr);
-    //print("*timeVal = %d, ", *timeVal);
-    addr += 4;
-    *idVal = ee_readShort(addr);
-    //print("*idVal = %d, ", *idVal);
-    addr += 2;
-  }
-  else
-  {
-    oledprint("Wrong address!\n");
-  }
-  return addr;
 }
 
 /***** BUTTON METHODS ******/
@@ -242,78 +107,74 @@ void P17_Check_In() {
 }
 
 void P27_PartToPart() {
-   clear()
+   clear();
 
-   int counter = 0;
-   int waitTime = 0;
-   int totalTime = 100;
    char received = 0;
    int irlenb = 0;
-   
+
    memset(&theirAnswers, 0, sizeof(theirAnswers));
 
    irclear();
-   for (int i = 0; i < (rand() % MY_ID); i++) {
-        waitTime = rand() % totalTime;
-        waitTime += 100;
-     }
-
-     counter = 0;
-     oledprint("Hold still!");
-     pause(1000);
+     oledprint("Hold still\nplease!");
      rgbs(GREEN, GREEN);
-     while(counter < totalTime) {
-      //oledprint("Receiving");
-      if (counter == waitTime) {
-       clear();
-       //oledprint("Sending");
-       rgbs(RED, RED);
-       irprint("%s\n", MY_ANSWERS);
-       rgbs(OFF, OFF);
-      }
-      if(received == 0){       
-       irlenb = irscan("%s\n", &theirAnswers);
-       if (irlenb > 0) {
-        oledprint("Received");
-        rgbs(GREEN, GREEN);
+     pause(2000);
+     rgbs(RED, RED);
+     irprint("%d%c%c%c%c", MY_ID, MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
+     rgbs(OFF, OFF);
+     pause(500);
+
+     irlenb = irscan("%d%c%c%c%c\n", &theirID, &theirAnswers[0], &theirAnswers[1], &theirAnswers[2], &theirAnswers[3]);
+     if (irlenb > 0) {
+        rgbs(YELLOW, YELLOW);
         received = 1;
         irclear();
-       }
-      }
-       counter++;
-       pause(10);
+        pause(500);
      }
 
      rgbs(OFF, OFF);
 
      if (received == 1) {
-
-      //  int y = accel(AY);                           // Get y tilt
-
+       
+        // SAVE THE CONTACT
+        storeContact(MyTime, theirID);
 
         // PICK RANDOM QUESTION
         short randIndex = rand() % NUM_QUESTIONS;
-        while (MY_ANSWERS[randIndex] != theirAnswers[randIndex]) {
-           randIndex = rand() % NUM_QUESTIONS;
+
+        if (MY_ANSWERS[randIndex] != theirAnswers[randIndex]) {
+          for (short i = 0; i < NUM_QUESTIONS; i++) {
+           if (MY_ANSWERS[i] ==  theirAnswers[i]) {
+            randIndex = i;
+            break;
+           }
+          }
         }
+
         clear();
+        text_size(SMALL);
+
+        // No matches!
+        if (MY_ANSWERS[randIndex] != theirAnswers[randIndex]) {
+                   //S              E
+          oledprint("They answered   ");
+        }
+        else {     //S              E
+          oledprint("Both answered   ");
+        }
+
+        //printf("MyTime: %d\n", MyTime);
+        //printf("TheirID: %d\n", theirID);
+        //printf("MyAnswers: %d %d %d %d\n", MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
+        //printf("TheirAnswers: %d %d %d %d\n", theirAnswers[0], theirAnswers[1], theirAnswers[2], theirAnswers[3]);
+        //print("Selected: %d", randIndex);
+        //print(SURVEY_Q_ANSWERS[randIndex][theirAnswers[randIndex]]);
+
+        oledprint("%32s\n", SURVEY_Q_ANSWERS[randIndex][theirAnswers[randIndex]]);
+        oledprint(" to:\n");
+        oledprint(SURVEY_Q[randIndex]);
         rotate180();
 
-        text_size(SMALL);
-        cursor(0, 4);
-        oledprint("You both answered...\n");
-        oledprint(SURVEY_Q_ANSWERS[randIndex][MY_ANSWERS[randIndex]]);
-        oledprint("to the question:");
-        oledprint(SURVEY_Q[randIndex]);
-
-        pause(5000);
-        /*
-        // PICK RANDOM DISCOMMON
-        short dissim_randIndex = random() % NUM_QUESTIONS
-        while(MY_ANSWERS[dissim_randIndex] == theirAnswers[dissim_randIndex]) {
-           dissim_randIndex = random() % NUM_QUESTIONS
-        }
-        */
+        pause(10000);
      }
      pause(500);
 }
@@ -362,6 +223,63 @@ void P25_Upload_Contacts() {
    oledprint("P17 to CHECK-IN");
 }
 
+/** HELPER METHODS **/
+void print_all_contacts() {
+
+  short currentCount = retrieveCount();
+
+  print("Current Contact Count: %d\n", currentCount);
+
+  unsigned int t;
+  short id;
+  int address = MEM_START_ADDRESS;
+
+  for(int i = 0; i < currentCount; i++)
+  {
+    address = retrieveContact(address, &t, &id);
+    print("%d, %d\n", t, id);
+  }
+}
+
+void listenForServer() {
+   int i = 0;
+   while(i < LISTENFORSERVER_TIMEOUT) {
+    rgbs(GREEN, GREEN);
+    memset(&theirID, 0, sizeof(theirID));        // Clear their variables
+    memset(&serverTime, 0, sizeof(serverTime));
+
+    irscan("%d%d", &serverTime, &theirID);
+
+    if(theirID > 0) {
+       rgbs(CYAN, CYAN);
+       print("Heard from... id: %d ,", theirID);
+       print("time: %d\n", serverTime);
+
+       clear();
+       oledprint("Check-in at %d");
+       storeContact(serverTime, theirID);
+
+       sendBeacon();
+       pause(500);
+       Display_Main_Menu();
+       break;
+    }
+    pause(50);
+    rgbs(OFF, OFF);
+
+    i += 1;
+  }
+  rgbs(OFF, OFF);
+}
+
+void sendBeacon() {
+  for(int i = 0; i < 5; i++) {
+    rgbs(RED, RED);
+    irprint("%d\n%16s\n", MY_ID, MY_NAME);
+    pause(100);
+    rgbs(OFF, OFF);
+  }
+}
 
 /**** DISPLAY METHODS ******/
 void Display_Main_Menu() {
@@ -372,4 +290,112 @@ void Display_Main_Menu() {
    oledprint("%s", MY_NAME);
    cursor(0, 4);
    oledprint("P17 to CHECK-IN");
+}
+
+void Display_Private_SumStats(unsigned int *y) {
+   clear();
+   screen_auto(OFF);
+   
+            //S              ES              E 
+   oledprint("You've checked  in at %d places.\n\n", retrieveServerCount());
+   oledprint("You've met\n %d people!\n", retrieveServerCount());
+   
+   rotate180();
+   screen_update();
+   
+   while (*y < -40) {
+    *y = accel(AY);
+    pause(20);
+   }     
+   
+   clear();
+   screen_auto(ON);                          // Enable screen auto-update
+   Display_Main_Menu();
+}  
+
+/**** EEPROM METHODS ****/
+
+void storeUserCount(short count) {
+  ee_writeShort(count, USER_COUNT_ADDRESS);
+}
+
+void storeServerCount(short count) {
+  ee_writeShort(count, SERVER_COUNT_ADDRESS);
+}
+
+// RETURNS NUMBER OF USER INTERACTIONS
+short retrieveUserCount() {
+   if (ee_readShort(USER_COUNT_ADDRESS) == -1) {
+    storeServerCount(0);
+  }    
+  
+  return ee_readShort(USER_COUNT_ADDRESS);
+}
+
+
+// RETURNS NUMBER OF SERVER INTERACTIONS
+short retrieveServerCount() {
+  if (ee_readShort(SERVER_COUNT_ADDRESS) == -1) {
+    storeServerCount(0);
+  }    
+  
+  return ee_readShort(SERVER_COUNT_ADDRESS);
+}    
+
+
+// RETURNS OVERALL COUNT
+short retrieveCount() {
+  
+  if (ee_readShort(USER_COUNT_ADDRESS) == -1) {
+    storeUserCount(0); 
+  }    
+
+  return retrieveServerCount() + retrieveUserCount();
+}
+
+int storeContact(unsigned int timeVal, short idVal) {
+
+  unsigned int addr = MEM_START_ADDRESS + (retrieveCount() * 6);
+  
+  if(addr < (65536 - 6)) {
+    ee_writeInt(timeVal, addr);
+    addr += 4;
+    ee_writeShort(idVal, addr);
+    addr += 2;
+    //int memRemaining = 65535 - (addr);
+    //memRemaining /= 6;
+ 
+    // CASES
+    if (idVal < 1000) {
+     // STAFF BADGE
+     // STUB 
+    }    
+    else if (idVal < 2000) {
+    // USER BADGE
+      storeUserCount(retrieveUserCount() + 1);    
+    }  
+    else if (idVal < 3000) {
+    // SERVER BADGE
+      storeServerCount(retrieveServerCount() + 1);     
+    }          
+  }
+  else {
+    clear();
+    oledprint("ERROR!\n");
+  }
+  return addr;
+}
+
+int retrieveContact(int addr, unsigned int *timeVal, short *idVal) {
+  if(addr < (65536 - 6)) {
+    *timeVal = ee_readInt(addr);
+    addr += 4;
+    *idVal = ee_readShort(addr);
+    addr += 2;
+  }
+  else {
+    clear();
+    oledprint("ERROR!\n");
+  }
+  return addr;
 }
