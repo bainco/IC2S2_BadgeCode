@@ -10,3 +10,8 @@
 
 // FIND USB PORT AUTOMAGICALLY
 ls /dev | grep "cu.usbserial-" | cut -c14- | xargs /Applications/SimpleIDE.app/Contents/propeller-gcc/bin/propeller-load -Dreset=dtr -I /Applications/SimpleIDE.app/Contents/MacOS/../propeller-gcc/propeller-load/ -b ACTIVITYBOARD cmm/participant-code.elf -e -r -p
+
+
+// GET MOST RECENT FILE IN SOME FOLDER; COPY IT TO SOME OTHER FOLDER
+
+ls <path_to_src> -t | head -1 | xargs -I{} cp {} <path_to_dest>
