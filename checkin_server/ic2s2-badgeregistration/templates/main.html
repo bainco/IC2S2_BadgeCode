@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block header %}{{ header }}{% endblock %}
+{% block content %}
+
+<!--<div class="displaybox">-->
+<div class="displaybox">
+   <h1>Badge Registration Form</h1>
+   <br>
+    <form class="form-container" method="post" action="/Attendee/">
+    <div class="form-title">First Name</div>
+    <input class="form-field" type="text" name="firstName" /><br/>
+    <div class="form-title">Last Name</div>
+    <input class="form-field" type="text" name="lastName" /><br/>
+    <div class="form-title">Position</div>
+    <input class="form-field" type="text" name="position" /><br/>
+    <div class="form-title">Which type of fame would you most prefer?</div>
+     <input type="radio" name="survey_answer0" value="0" checked> Having 1,000,000 followers on YouTube<br>
+     <input type="radio" name="survey_answer0" value="1"> Having a TED talk<br>
+     <input type="radio" name="survey_answer0" value="2"> Being on the cover of the New York Times<br>
+     <input type="radio" name="survey_answer0" value="3"> Being a guest on the Late Show<br>
+     <br>
+     <div class="form-title">Which technology are you looking forward to the most?</div>
+     <input type="radio" name="survey_answer1" value="0" checked> Self-driving cars<br>
+     <input type="radio" name="survey_answer1" value="1"> A robot butler<br>
+     <input type="radio" name="survey_answer1" value="2"> Interstellar travel<br>
+     <input type="radio" name="survey_answer1" value="3"> Brain computer interface<br>
+     <input type="radio" name="survey_answer1" value="4"> Virtual Reality<br>
+     <br>
+     <div class="form-title">Which TV show world would you want to live in for a year?</div>
+     <input type="radio" name="survey_answer2" value="0" checked> Mad Men<br>
+     <input type="radio" name="survey_answer2" value="1"> Game of Thrones<br>
+     <input type="radio" name="survey_answer2" value="2"> Dowton Abbey<br>
+     <input type="radio" name="survey_answer2" value="3"> Breaking Bad<br>
+     <input type="radio" name="survey_answer2" value="3"> Star Trek<br>
+     <br>
+     <div class="form-title">Which of these musical genres do you prefer?</div>
+     <input type="radio" name="survey_answer3" value="0" checked> Pop Music<br>
+     <input type="radio" name="survey_answer3" value="1"> Classical Music<br>
+     <input type="radio" name="survey_answer3" value="2"> Jazz<br>
+     <input type="radio" name="survey_answer3" value="3"> Rock<br>
+     <input type="radio" name="survey_answer3" value="3"> Musicals<br>
+     <br>
+     <div class="submit-container">
+     <input class="submit-button" type="submit" value="SUBMIT" />
+     </div>
+    </form>
+    <br>
+</div>
+<br>
+{% endblock %}

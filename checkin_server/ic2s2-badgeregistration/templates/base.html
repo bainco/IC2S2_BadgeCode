@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+{% block head %}
+<title>{% block title %}{{ title }}{% endblock %}</title>
+{% endblock %}
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+   <div id="page">
+
+         <div id="klg-prenav"> <div class="right">
+            <img src="/css/images/logo.png" href="" />
+         </div></div>
+         <div class="container" id="klg-nav-inner"> </div>
+
+         <div class="left">
+         <a id="klg-logo" href="/" alt="logo"></a>
+         </div>
+
+	<div class="content">
+	{% block content %}{% endblock %}
+	</div>
+
+
+	<div id="footer">
+	Copyright &copy;2016 Connor Bain <a href="mailto:connorbain@u.northwestern.edu">connorbain@u.northwestern.edu</a>
+	</div>
+</div>
+
+
+</body>
+</html>

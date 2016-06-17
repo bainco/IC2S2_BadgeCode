@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block header %}
+{{ header }}
+{% endblock %}
+{% block content %}
+<script>
+function showNextButton() {
+    setTimeout(function(){
+      document.getElementById("nextButton").setAttribute("style", "display: block;");
+    }, 10000);
+}
+</script>
+<div class="displaybox">
+    <h1>Confirm Your Information</h1>
+    <br>
+    <form class="form-container" method="post" action="/Download/">
+    <div class="form-title">First Name:</div>
+    <input class="form-field" type="text" name="firstName" value={{ firstName }} /><br/>
+    <div class="form-title">Last Name:</div>
+    <input class="form-field" type="text" name="lastName" value={{ lastName }} /><br/>
+    <div class="form-title">Position:</div>
+    <input class="form-field" type="text" name="position" value={{ position }} /><br/>
+    <!-- <label for="badgeID">BadgeID: {{ badgeID }}</label><input type="hidden" label="badgeID" value={{ badgeID }} readonly /></br> -->
+    <div class="submit-container">
+    <input class="submit-button" type="submit" value="CONFIRM AND BURN TO BADGE" onclick="showNextButton()" />
+    </div>
+    <input type="hidden" name="survey_answer0" value={{ survey_answer0 }} />
+    <input type="hidden" name="survey_answer1" value={{ survey_answer1 }} />
+    <input type="hidden" name="survey_answer2" value={{ survey_answer2 }} />
+    <input type="hidden" name="survey_answer3" value={{ survey_answer3 }} />
+    </form>
+
+    <br>
+    <div id="nextButton" style="display: none;">
+    <form class="form-container" action="/">
+      <div class="submit-container">
+      <input class="submit-button" type="submit" value="DONE">
+      </div>
+   </form>
+   </div>
+</div>
+<br>
+{% endblock %}
