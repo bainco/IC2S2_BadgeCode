@@ -22,6 +22,22 @@ from google.appengine.ext import ndb
 
 jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/templates"))
 
+from datetime import tzinfo, timedelta, datetime
+class FixedOffset(tzinfo):
+    def __init__(self, offset):
+        self.__offset = timedelta(hours=offset)
+        self.__dst = timedelta(hours=offset-1)
+        self.__name = ''
+
+    def utcoffset(self, dt):
+        return self.__offset
+
+    def tzname(self, dt):
+        return self.__name
+
+    def dst(self, dt):
+        return self.__dst
+
 class Attendee(ndb.Model):
     date = ndb.DateTimeProperty(auto_now_add=True)
     badgeID = ndb.IntegerProperty(required=True)
@@ -52,13 +68,16 @@ class MainHandler(MyHandler):
 class DownloadHandler(MyHandler):
     def generate_header(self, badgeID, firstName, lastName, survey_answer0, survey_answer1, survey_answer2, survey_answer3):
 
+        theTime = int(datetime.now(FixedOffset(-5) - datetime(1970,1,1)).total_seconds() + 10)
+
+        lineTime = "const int MY_INIT_TIME = " + str(theTime) + ";\n"
         lineID = "const short MY_ID = " + str(badgeID) + ";\n"
         lineFName = "const char MY_FIRST_NAME[32] = \"" + firstName +"\";\n"
         lineLName = "const char MY_LAST_NAME[32] = \"" + lastName +"\";\n"
 
         lineSAnswers = "const unsigned short MY_ANSWERS[NUM_QUESTIONS] = {" + str(survey_answer0) + "," + str(survey_answer1) + "," + str(survey_answer2) + "," + str(survey_answer3) + "};\n"
 
-        return (lineID + lineFName + lineLName + lineSAnswers)
+        return (lineTime + lineID + lineFName + lineLName + lineSAnswers)
 
     def post(self, num):
         firstName = self.request.get('firstName')

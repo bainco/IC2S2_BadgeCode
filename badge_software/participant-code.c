@@ -1,6 +1,4 @@
 /**
-
-
 Staff IDs are below 1000
 Attendee IDS ARE IN THE 1000s
 Server IDs are in the 2000s
@@ -17,20 +15,24 @@ Waits are used before a helper method
 
 #include "simpletools.h"                     // Include simpletools library
 #include "badgetools.h"                      // Include badgetools library
+#include "datetime.h"                         // Include datetime library
 #include "eeprom.h"
 #include "survey.h"
 #include "part_strings.h"
 
 /*** GLOBALS ***/
 
-unsigned int MyTime;
+datetime dt;                                  // Date/teme values
+int MY_TIME;                                       // Epoch time value
+char dates[9];                                // Date string
+char times[9];                                // Time string
 
 unsigned short theirID;
 unsigned short theirAnswers[NUM_QUESTIONS];
 
 unsigned int serverTime;
 
-int LISTENFORSERVER_TIMEOUT = 10000;
+int LISTENFORSERVER_TIMEOUT = 100;
 void sendBeacon();
 void listenForServer();
 
@@ -58,9 +60,18 @@ void main()                                  // Main function
 {
   badge_setup();                             // Call badge setup
 
-
-  // STUB STUB STUB
-  MyTime = 0; //INITIALIZE TIME
+  MY_TIME = ee_readInt(TIME_ADDRESS);        // Get most recent time
+  
+  if (MY_TIME == -1) {  
+      dt = dt_fromEt(MY_INIT_TIME);                         // Convert from epoch to datetime
+      ee_writeInt(dt_toEt(dt), TIME_ADDRESS);
+  }  
+  
+  else {
+      dt = dt_fromEt(MY_TIME); 
+  }      
+  
+  dt_run(dt);                                 // Use to start system timer
 
   Display_Main_Menu();
 
@@ -69,31 +80,49 @@ void main()                                  // Main function
   // Main loop for button pressing
   while(1)
   {
+    dt = dt_get();                             // Get current system time
+    MY_TIME = dt_toEt(dt);                        // Datetime -> epoch time
+    dt_toDateStr(dt, dates);                   // Convert to strings
+    dt_toTimeStr(dt, times);
+
     states = buttons();
     y = accel(AY);
     switch(states)
     {
       case 0b0100000:
+        screen_scrollStop();
         P17_Check_In();
         break;
 
       case 0b0000100:                          // P25 Pressed - upload all contacts
+        screen_scrollStop();
         P25_Upload_Contacts();
         break;
 
       case 0b0000001:
+        screen_scrollStop();
         P27_PartToPart();
         break;
 
       case 0b1111111:                         // OSH pressed, erase EEPROM
+        screen_scrollStop();
         All_OSH_Erase_EEPROM();
         break;
 
        default:
         if (y < -40) {
+          screen_scrollStop();
           Display_Private_SumStats(&y);
         }
-
+        if(dt.s == 0) {                             // If next minute over
+           MY_TIME = dt_toEt(dt);                        // Datetime -> epoch time
+           ee_writeInt(MY_TIME, TIME_ADDRESS);                  // Store in EEPROM
+           led(0, ON);                              // Indicate storing P27 LED
+           while(dt.s == 0) {                        // Wait for second 0 to finish                                        // to avoid multiple EE writes
+             dt = dt_get();                         // Check time
+         }
+         led(0, OFF);                             // Second over, P27 LED off
+      }
         break;
     }
   }
@@ -104,6 +133,7 @@ void P17_Check_In() {
    irclear();
    listenForServer();
    rgbs(OFF, OFF);
+   Display_Main_Menu();
 }
 
 void P27_PartToPart() {
@@ -115,6 +145,8 @@ void P27_PartToPart() {
    memset(&theirAnswers, 0, sizeof(theirAnswers));
 
    irclear();
+      text_size(SMALL);
+
      oledprint("Hold still\nplease!");
      rgbs(GREEN, GREEN);
      pause(2000);
@@ -136,7 +168,9 @@ void P27_PartToPart() {
      if (received == 1) {
 
         // SAVE THE CONTACT
-        storeContact(MyTime, theirID);
+        dt = dt_get();                             // Get current system time
+        MY_TIME = dt_toEt(dt);                        // Datetime -> epoch time
+        storeContact(MY_TIME, theirID);
 
         // PICK RANDOM QUESTION
         short randIndex = rand() % NUM_QUESTIONS;
@@ -177,6 +211,7 @@ void P27_PartToPart() {
         pause(10000);
      }
      pause(500);
+     Display_Main_Menu();
 }
 
 void All_OSH_Erase_EEPROM() {
@@ -215,12 +250,7 @@ void P25_Upload_Contacts() {
    oledprint("Done");
    pause(250);
    clear();
-   text_size(SMALL);
-   oledprint("IR Send");
-   cursor(0, 3);
-   oledprint("%s", MY_FIRST_NAME);
-   cursor(0, 4);
-   oledprint("%s", MY_LAST_NAME);
+   Display_Main_Menu();
 }
 
 /** HELPER METHODS **/
@@ -254,6 +284,8 @@ void listenForServer() {
        rgbs(CYAN, CYAN);
        print("Heard from... id: %d ,", theirID);
        print("time: %d\n", serverTime);
+       
+       dt_set(dt_fromEt(serverTime));
 
        clear();
        oledprint("Check-in at %d");
@@ -284,15 +316,20 @@ void sendBeacon() {
 /**** DISPLAY METHODS ******/
 void Display_Main_Menu() {
    clear();
-   text_size(SMALL);
-   cursor(0, 3);
+   text_size(LARGE);
+   cursor(0, 0);
    oledprint("%s", MY_FIRST_NAME);
-   cursor(0, 4);
+   cursor(0,1);
    oledprint("%s", MY_LAST_NAME);
+             //S              E
+   //oledprint("%s", dates);               // Something to shift
+   //screen_scrollRight(0, 15);                 // Scroll left-right
+
 }
 
 void Display_Private_SumStats(unsigned int *y) {
    clear();
+   text_size(SMALL);
    screen_auto(OFF);
             //S              ES              E
    oledprint("You've checked  in at %d places.\n\n", retrieveServerCount());
