@@ -5,8 +5,12 @@
 {% endblock %}
 {% block content %}
 <script>
+
 function showNextButton() {
+
+   document.getElementById("nextButtonContainer").setAttribute("style", "display:block;");
     setTimeout(function(){
+      document.getElementById("waitText").setAttribute("style", "display: none;");
       document.getElementById("nextButton").setAttribute("style", "display: block;");
     }, 10000);
 }
@@ -32,9 +36,10 @@ function showNextButton() {
     </form>
 
     <br>
-    <div id="nextButton" style="display: none;">
+    <div id="nextButtonContainer" style="display: none;">
     <form class="form-container" action="/">
-      <div class="submit-container">
+      <p id="waitText">Please wait...</p>
+      <div id="nextButton" style="display: none;" class="submit-container">
       <input class="submit-button" type="submit" value="DONE">
       </div>
    </form>

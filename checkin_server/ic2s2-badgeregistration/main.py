@@ -22,21 +22,7 @@ from google.appengine.ext import ndb
 
 jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/templates"))
 
-from datetime import tzinfo, timedelta, datetime
-class FixedOffset(tzinfo):
-    def __init__(self, offset):
-        self.__offset = timedelta(hours=offset)
-        self.__dst = timedelta(hours=offset-1)
-        self.__name = ''
-
-    def utcoffset(self, dt):
-        return self.__offset
-
-    def tzname(self, dt):
-        return self.__name
-
-    def dst(self, dt):
-        return self.__dst
+from datetime import datetime, timedelta
 
 class Attendee(ndb.Model):
     date = ndb.DateTimeProperty(auto_now_add=True)
@@ -68,7 +54,10 @@ class MainHandler(MyHandler):
 class DownloadHandler(MyHandler):
     def generate_header(self, badgeID, firstName, lastName, survey_answer0, survey_answer1, survey_answer2, survey_answer3):
 
-        theTime = int(datetime.now(FixedOffset(-5) - datetime(1970,1,1)).total_seconds() + 10)
+        current_time_in_utc = datetime.utcnow()
+        result = current_time_in_utc + timedelta(hours=-5)
+
+        theTime = int ((result - datetime(1970,1,1)).total_seconds())
 
         lineTime = "const int MY_INIT_TIME = " + str(theTime) + ";\n"
         lineID = "const short MY_ID = " + str(badgeID) + ";\n"
