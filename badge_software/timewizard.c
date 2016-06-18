@@ -14,6 +14,8 @@ char dates[9];                                // Date string
 char times[9];                                // Time string
 
 short theirID;
+short serverID;
+char serverName[32];
 int serverTime;
 int LISTENFORSERVER_TIMEOUT = 100;
 void sendBeacon();
@@ -21,9 +23,29 @@ void listenForServer();
 
 void All_OSH_Erase_EEPROM();
 void P17_Check_In();
+void P27_PartToPart();
+void sendServerBeacon();
+
+void sendServerBeacon() {
+
+  // rgbs(RED, RED);                          // Signal transmitting
+   irprint("%d, %d, %32s", dt_toEt(dt_get()), TIME_WIZARD_ID, "TIME WIZARD"); // Transmit epoch time
+   rgbs(OFF, OFF);                          // Finish transmitting
+}
 
 void Display_Main_Menu();
 void Display_Private_SumStats(unsigned int *y);
+
+void P27_PartToPart() {
+   short i = 0;
+   while (i < 10) {
+      irclear();
+      sendServerBeacon();
+      pause(50);
+      i += 1;
+   }
+   Display_Main_Menu();
+}
 
 void main()                                  // Main function
 {
@@ -60,6 +82,10 @@ void main()                                  // Main function
       case 0b0100000:
         P17_Check_In();
         break;
+
+      case 0b0000001:
+         P27_PartToPart();
+         break;
 
       case 0b1111111:                         // OSH pressed, erase EEPROM
         All_OSH_Erase_EEPROM();
@@ -126,14 +152,16 @@ void listenForServer() {
    int irlenb = 0;
    while(i < LISTENFORSERVER_TIMEOUT) {
     rgbs(GREEN, GREEN);
-    memset(&theirID, 0, sizeof(theirID));        // Clear their variables
+    memset(&theirID, 0, sizeof(serverID));        // Clear their variables
     memset(&serverTime, 0, sizeof(serverTime));
+    memset(&serverName, 0, sizeof(serverName));
 
-    irlenb = irscan("%d,%d", &serverTime, &theirID);
+
+    irlenb = irscan("%d, %d, %32s", &serverTime, &serverID, &serverName);
 
     if(irlenb > 0) {
        rgbs(CYAN, CYAN);
-
+       sendBeacon();
        pause(500);
        Display_Main_Menu();
        return;
@@ -150,8 +178,11 @@ void listenForServer() {
 void sendBeacon() {
   for(int i = 0; i < 5; i++) {
     rgbs(RED, RED);
-    irprint("%d, %32s, %d", TIME_WIZARD_ID, "TIME WIZARD", dt_toEt(dt_get()));
-    pause(100);
+    irprint("%d, %d, %32s", TIME_WIZARD_ID, dt_toEt(dt_get()), "TIME WIZARD");
+    clear();
+    text_size(SMALL);
+    oledprint("%d", dt_toEt(dt_get()));
+    pause(1000);
     rgbs(OFF, OFF);
   }
 }
@@ -161,7 +192,7 @@ void Display_Main_Menu() {
    clear();
    text_size(LARGE);
    cursor(0, 0);
-   oledprint("CONNOR");
+   oledprint("%d", TIME_WIZARD_ID);
    cursor(0,1);
    oledprint("BAIN");
 }

@@ -1,4 +1,5 @@
 server-code.c
+eeprom.c
 >compiler=C
 >memtype=cmm main ram compact
 >optimize=-Os
@@ -6,4 +7,4 @@ server-code.c
 >-fno-exceptions
 >defs::-std=c99
 >-lm
->BOARD::ACTIVITYBOARD
+>BOARD::GENERIC

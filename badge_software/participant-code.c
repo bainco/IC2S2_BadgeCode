@@ -3,7 +3,6 @@ Staff IDs are below 1000
 Attendee IDS ARE IN THE 1000s
 Server IDs are in the 2000s
 
-
 Policy is to clear at the beginning of any display command.
 
 Anything that just posts a screen should start with "Display"
@@ -21,30 +20,23 @@ Waits are used before a helper method
 #include "part_strings.h"
 
 /*** GLOBALS ***/
+short TIME_WIZARD_ID = 9999;
 
 datetime dt;                                  // Date/teme values
 int MY_TIME;                                       // Epoch time value
 char dates[9];                                // Date string
 char times[9];                                // Time string
 
-unsigned short theirID;
-unsigned short theirAnswers[NUM_QUESTIONS];
+short serverID;
+short theirID;
+short theirAnswers[NUM_QUESTIONS];
+char theirName[32];
 
-unsigned int serverTime;
+int serverTime;
 
-int LISTENFORSERVER_TIMEOUT = 100;
+short LISTENFORSERVER_TIMEOUT = 100;
 void sendBeacon();
 void listenForServer();
-
-void storeServerCount(short count);
-void storeUserCount(short count);
-short retrieveCount(); // Actually returns the count. No referencing.
-short retrieveUserCount(); // Actually returns the count. No referencing.
-short retrieveServerCount(); // Actually returns the count. No referencing.
-
-
-int storeContact(unsigned int timeVal, short idVal);
-int retrieveContact(int addr, unsigned int *timeVal, short *idVal);
 
 void print_all_contacts();
 
@@ -61,16 +53,16 @@ void main()                                  // Main function
   badge_setup();                             // Call badge setup
 
   MY_TIME = ee_readInt(TIME_ADDRESS);        // Get most recent time
-  
-  if (MY_TIME == -1) {  
+
+  if (MY_TIME == -1) {
       dt = dt_fromEt(MY_INIT_TIME);                         // Convert from epoch to datetime
       ee_writeInt(dt_toEt(dt), TIME_ADDRESS);
-  }  
-  
+  }
+
   else {
-      dt = dt_fromEt(MY_TIME); 
-  }      
-  
+      dt = dt_fromEt(MY_TIME);
+  }
+
   dt_run(dt);                                 // Use to start system timer
 
   Display_Main_Menu();
@@ -90,22 +82,18 @@ void main()                                  // Main function
     switch(states)
     {
       case 0b0100000:
-        screen_scrollStop();
         P17_Check_In();
         break;
 
       case 0b0000100:                          // P25 Pressed - upload all contacts
-        screen_scrollStop();
         P25_Upload_Contacts();
         break;
 
       case 0b0000001:
-        screen_scrollStop();
         P27_PartToPart();
         break;
 
       case 0b1111111:                         // OSH pressed, erase EEPROM
-        screen_scrollStop();
         All_OSH_Erase_EEPROM();
         break;
 
@@ -130,6 +118,8 @@ void main()                                  // Main function
 
 /***** BUTTON METHODS ******/
 void P17_Check_In() {
+   clear();
+   oledprint("Check-in Mode");
    irclear();
    listenForServer();
    rgbs(OFF, OFF);
@@ -141,7 +131,7 @@ void P27_PartToPart() {
 
    char received = 0;
    int irlenb = 0;
-
+   memset(&theirID, 0, sizeof(theirID));
    memset(&theirAnswers, 0, sizeof(theirAnswers));
 
    irclear();
@@ -245,6 +235,7 @@ void All_OSH_Erase_EEPROM() {
 
 void P25_Upload_Contacts() {
    clear();
+   text_size(SMALL);
    oledprint("Upload  to      computer");
    print_all_contacts();
    oledprint("Done");
@@ -273,28 +264,42 @@ void print_all_contacts() {
 
 void listenForServer() {
    int i = 0;
+   int irlenb = 0;
    while(i < LISTENFORSERVER_TIMEOUT) {
     rgbs(GREEN, GREEN);
-    memset(&theirID, 0, sizeof(theirID));        // Clear their variables
+    memset(&serverID, 0, sizeof(serverID));        // Clear their variables
     memset(&serverTime, 0, sizeof(serverTime));
+    memset(&theirName, 0, sizeof(theirName));
 
-    irscan("%d%d", &serverTime, &theirID);
+    irlenb = irscan("%d, %d, %32s", &serverTime, &serverID, &theirName);
 
-    if(theirID > 0) {
+    if(strlen(theirName) > 0) {
        rgbs(CYAN, CYAN);
-       print("Heard from... id: %d ,", theirID);
-       print("time: %d\n", serverTime);
-       
+   //    print("Heard from... id: %d ,", theirID);
+//       print("time: %d\n", serverTime);
+         clear();
+         text_size(SMALL);
+         oledprint("ID: %d\n", serverID);
+         oledprint("Time: %d", serverTime);
+         oledprint("Name: %32s", theirName);
+         pause(1000);
+
        dt_set(dt_fromEt(serverTime));
 
-       clear();
-       oledprint("Check-in at %d");
-       storeContact(serverTime, theirID);
-
-       sendBeacon();
+       if (serverID != TIME_WIZARD_ID) {
+          clear();
+          text_size(SMALL);
+          oledprint("Check-in at %d", serverID);
+          storeContact(serverTime, serverID);
+          sendBeacon();
+       }
+       else {
+          clear();
+          oledprint("Time Update!");
+       }
        pause(500);
        Display_Main_Menu();
-       break;
+       return;
     }
     pause(50);
     rgbs(OFF, OFF);
@@ -302,12 +307,16 @@ void listenForServer() {
     i += 1;
   }
   rgbs(OFF, OFF);
+ return;
 }
 
 void sendBeacon() {
   for(int i = 0; i < 5; i++) {
     rgbs(RED, RED);
-    irprint("%d\n%16s\n", MY_ID, MY_FIRST_NAME);
+    irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+    text_size(SMALL);
+    clear();
+    oledprint("%d\n%d\n%32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
     pause(100);
     rgbs(OFF, OFF);
   }
@@ -321,10 +330,8 @@ void Display_Main_Menu() {
    oledprint("%s", MY_FIRST_NAME);
    cursor(0,1);
    oledprint("%s", MY_LAST_NAME);
-             //S              E
    //oledprint("%s", dates);               // Something to shift
    //screen_scrollRight(0, 15);                 // Scroll left-right
-
 }
 
 void Display_Private_SumStats(unsigned int *y) {
@@ -346,90 +353,4 @@ void Display_Private_SumStats(unsigned int *y) {
    clear();
    screen_auto(ON);                          // Enable screen auto-update
    Display_Main_Menu();
-}
-
-/**** EEPROM METHODS ****/
-void storeUserCount(short count) {
-  ee_writeShort(count, USER_COUNT_ADDRESS);
-}
-
-void storeServerCount(short count) {
-  ee_writeShort(count, SERVER_COUNT_ADDRESS);
-}
-
-// RETURNS NUMBER OF USER INTERACTIONS
-short retrieveUserCount() {
-   if (ee_readShort(USER_COUNT_ADDRESS) == -1) {
-    storeServerCount(0);
-  }
-
-  return ee_readShort(USER_COUNT_ADDRESS);
-}
-
-
-// RETURNS NUMBER OF SERVER INTERACTIONS
-short retrieveServerCount() {
-  if (ee_readShort(SERVER_COUNT_ADDRESS) == -1) {
-    storeServerCount(0);
-  }
-
-  return ee_readShort(SERVER_COUNT_ADDRESS);
-}
-
-
-// RETURNS OVERALL COUNT
-short retrieveCount() {
-
-  if (ee_readShort(USER_COUNT_ADDRESS) == -1) {
-    storeUserCount(0);
-  }
-
-  return retrieveServerCount() + retrieveUserCount();
-}
-
-int storeContact(unsigned int timeVal, short idVal) {
-
-  unsigned int addr = MEM_START_ADDRESS + (retrieveCount() * 6);
-
-  if(addr < (65536 - 6)) {
-    ee_writeInt(timeVal, addr);
-    addr += 4;
-    ee_writeShort(idVal, addr);
-    addr += 2;
-    //int memRemaining = 65535 - (addr);
-    //memRemaining /= 6;
-
-    // CASES
-    if (idVal < 1000) {
-     // STAFF BADGE
-     // STUB
-    }
-    else if (idVal < 2000) {
-    // USER BADGE
-      storeUserCount(retrieveUserCount() + 1);
-    }
-    else if (idVal < 3000) {
-    // SERVER BADGE
-      storeServerCount(retrieveServerCount() + 1);
-    }
-  }
-  else {
-    clear();
-    oledprint("ERROR!\n");
-  }
-  return addr;
-}
-
-int retrieveContact(int addr, unsigned int *timeVal, short *idVal) {
-  if(addr < (65536 - 6)) {
-    *timeVal = ee_readInt(addr);
-    addr += 4;
-    *idVal = ee_readShort(addr);
-    addr += 2;
-  }
-  else {
-    clear();
-    oledprint("ERROR!\n");
-  }
-  return addr;
 }
