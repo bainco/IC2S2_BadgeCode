@@ -2,6 +2,54 @@
 {% block title %}{{ title }}{% endblock %}
 {% block header %}{{ header }}{% endblock %}
 {% block content %}
+<script>
+$(document).ready(function() {
+  $.ajax({
+    type: "GET",
+    url: "/data/names.csv",
+    dataType: "text",
+    success: function(data) {processData(data);}
+ });
+});
+
+var projects = [];
+function processData(myTxt) {
+    var myLines = myTxt.split(/\r\n|\n/);
+    for (var i=0; i < myLines.length; i++) {
+         entries = myLines[i].split(",")
+         var lastEntry = "";
+         for (var j = 2; j < entries.length; j++) {
+            lastEntry += entries[j];
+         }
+         lastEntry = lastEntry.replace(/"/g, "");
+          projects.push({value: entries[0], firstName:entries[0], lastName: entries[1], position: lastEntry});
+    }
+
+       $( "#firstName" ).autocomplete({
+         minLength: 0,
+         source: projects,
+         focus: function( event, ui ) {
+          $( "#firstName" ).val( ui.item.firstName );
+          return false;
+         },
+         select: function( event, ui ) {
+          $( "#firstName" ).val( ui.item.firstName );
+          //$( "#project-id" ).val( ui.item.value );
+          $( "#lastName" ).val( ui.item.lastName );
+          $( "#position" ).val(ui.item.position);
+
+          return false;
+         }
+       })
+       .autocomplete( "instance" )._renderItem = function( ul, item ) {
+         return $( "<li>" )
+          .append( "<a style=\"font-size:8pt;\">" + item.firstName + " " + item.lastName + ", " + item.position + "</a>" )
+          .appendTo( ul );
+       };
+}
+
+ </script>
+
 
 <!--<div class="displaybox">-->
 <div class="displaybox">
@@ -9,11 +57,11 @@
    <br>
     <form class="form-container" method="post" action="/Attendee/">
     <div class="form-title">First Name</div>
-    <input class="form-field" type="text" name="firstName" /><br/>
+    <input class="form-field" type="text" id="firstName" name="firstName" /><br/>
     <div class="form-title">Last Name</div>
-    <input class="form-field" type="text" name="lastName" /><br/>
-    <div class="form-title">Position</div>
-    <input class="form-field" type="text" name="position" /><br/>
+    <input class="form-field" type="text" id="lastName" name="lastName"/><br/>
+    <div class="form-title">Job Title</div>
+    <input class="form-field" type="text" id="position" name="position"/><br/>
     <div class="form-title">Which type of fame would you most prefer?</div>
      <input type="radio" name="survey_answer0" value="0" checked> Having 1,000,000 followers on YouTube<br>
      <input type="radio" name="survey_answer0" value="1"> Having a TED talk<br>

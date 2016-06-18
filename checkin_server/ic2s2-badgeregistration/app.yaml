@@ -8,21 +8,15 @@ handlers:
 - url: /css
   static_dir: css
 
-- url: /js
-  static_dir: js
-
 - url: /favicon\.ico
   static_files: favicon.ico
   upload: favicon\.ico
 
+- url: /data
+  static_dir: data
+
 - url: .*
   script: main.app
-
-- url: /c_templates
-  static_dir: c_templates
-
-- url: /imgs
-  static_dir: imgs
 
 libraries:
 - name: webapp2

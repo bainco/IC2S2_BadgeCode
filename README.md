@@ -4,9 +4,11 @@
 3. Copy badge-code folder to ~/Desktop
 4. Install folder action
 5. Enable folder action on ~/Downloads
+6. Disable Safari Auto-fill
 
 
 # To Register:
+0. MAKE SURE NAMES.CSV IS UPDATED
 1. Plug in badge
 2. Navigate to www.ic2s2-badgeregistration.appspot.com
 3. Fill out form; Click Submit
