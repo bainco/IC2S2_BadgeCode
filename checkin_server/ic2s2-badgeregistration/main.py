@@ -113,6 +113,7 @@ class AttendeeHandler(MyHandler):
         firstName = self.request.get('firstName')
         lastName = self.request.get('lastName')
         position = self.request.get('position')
+        logging.info(position)
         survey_answer0 = int(self.request.get('survey_answer0'))
         survey_answer1 = int(self.request.get('survey_answer1'))
         survey_answer2 = int(self.request.get('survey_answer2'))
@@ -120,7 +121,9 @@ class AttendeeHandler(MyHandler):
 
         self.templateValues['firstName'] = firstName
         self.templateValues['lastName'] = lastName
+
         self.templateValues['position'] = position
+        logging.info(self.templateValues['position'])
 
         self.templateValues['survey_answer0'] = survey_answer0
         self.templateValues['survey_answer1'] = survey_answer1
