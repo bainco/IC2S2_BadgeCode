@@ -10,5 +10,5 @@ short retrieveCount(); // Actually returns the count. No referencing.
 short retrieveUserCount(); // Actually returns the count. No referencing.
 short retrieveServerCount(); // Actually returns the count. No referencing.
 
-int storeContact(unsigned int timeVal, short idVal);
-int retrieveContact(int addr, unsigned int *timeVal, short *idVal);
+int storeContact(int timeVal, short idVal);
+int retrieveContact(unsigned int addr, int *timeVal, short *idVal);

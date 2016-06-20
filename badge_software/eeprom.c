@@ -35,7 +35,7 @@ short retrieveCount() {
   return retrieveServerCount() + retrieveUserCount();
 }
 
-int storeContact(unsigned int timeVal, short idVal) {
+int storeContact(int timeVal, short idVal) {
 
   unsigned int addr = MEM_START_ADDRESS + (retrieveCount() * 6);
 
@@ -67,7 +67,7 @@ int storeContact(unsigned int timeVal, short idVal) {
   return addr;
 }
 
-int retrieveContact(int addr, unsigned int *timeVal, short *idVal) {
+int retrieveContact(unsigned int addr, int *timeVal, short *idVal) {
   if(addr < (65536 - 6)) {
     *timeVal = ee_readInt(addr);
     addr += 4;
