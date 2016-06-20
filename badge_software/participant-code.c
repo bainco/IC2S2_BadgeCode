@@ -1,58 +1,46 @@
-/**
-Staff IDs are below 1000
-Attendee IDS ARE IN THE 1000s
-Server IDs are in the 2000s
-
-Policy is to clear at the beginning of any display command.
-
-Anything that just posts a screen should start with "Display"
-
-Anything that is the direct result of a button press should start with that button (i.e. P17_Check_in)
-
-Waits are used before a helper method
-*/
-
 #include "simpletools.h"                     // Include simpletools library
 #include "badgetools.h"                      // Include badgetools library
-#include "datetime.h"                         // Include datetime library
-#include "eeprom.h"
-#include "survey.h"
-#include "part_strings.h"
+#include "datetime.h"                        // Include datetime library
+#include "eeprom.h"                          // Include EEPROM library
+#include "survey.h"                          // Include Survey library
+#include "part_strings.h"                    // Include Part Info
 
 /*** GLOBALS ***/
 short TIME_WIZARD_ID = 9999;
 short BOOZE_WIZARD_ID = 10000;
-
 short TERMINATE = 13;
+short LISTENFORSERVER_TIMEOUT = 100;
 
+// Variables for Time
 datetime dt;                                  // Date/teme values
-int MY_TIME;                                       // Epoch time value
+int MY_TIME;                                  // Epoch time value
 char dates[9];                                // Date string
 char times[9];                                // Time string
 
+// Variables for Comms
+int serverTime;
 short serverID;
 short theirID;
 short theirAnswers[NUM_QUESTIONS];
 char theirName[32];
+/** END GLOBALS **/
 
-int serverTime;
-
-short LISTENFORSERVER_TIMEOUT = 100;
+/** FUNCTION DEFINITIONS **/
+// Comm Methods
 void sendBeacon();
 void listenForServer();
 
-void print_all_contacts();
-
-void P25_Upload_Contacts();
+// Button Methods
 void All_OSH_Erase_EEPROM();
 void P17_Check_In();
 void P27_PartToPart();
 
+// Display Methods
 void Display_Main_Menu();
 void Display_Private_SumStats(unsigned int *y);
+/** END FUNCTION DEFS **/
 
-void main()                                  // Main function
-{
+void main() {
   badge_setup();                             // Call badge setup
 
   MY_TIME = ee_readInt(TIME_ADDRESS);        // Get most recent time
@@ -73,26 +61,21 @@ void main()                                  // Main function
   int states;
   int y;
   // Main loop for button pressing
-  while(1)
-  {
+  while(1) {
+    // Update time
     dt = dt_get();                             // Get current system time
-    MY_TIME = dt_toEt(dt);                        // Datetime -> epoch time
+    MY_TIME = dt_toEt(dt);                     // Datetime -> epoch time
     dt_toDateStr(dt, dates);                   // Convert to strings
     dt_toTimeStr(dt, times);
 
+    // BUTTON LOGIC
     states = buttons();
-    y = accel(AY);
-    switch(states)
-    {
+    switch(states) {
       case 0b0100000:
-        P17_Check_In();
+        P17_Check_In();                       // P17 pressed, Server comms
         break;
 
-      case 0b0000100:                          // P25 Pressed - upload all contacts
-        P25_Upload_Contacts();
-        break;
-
-      case 0b0000001:
+      case 0b0000001:                         // P27 pressed, Part Comms
         P27_PartToPart();
         break;
 
@@ -100,19 +83,20 @@ void main()                                  // Main function
         All_OSH_Erase_EEPROM();
         break;
 
-       default:
+       default:                               // otherwise, check for private mode
+       y = accel(AY);
         if (y < -40) {
-          screen_scrollStop();
           Display_Private_SumStats(&y);
         }
+        // Save time to EEPROM every minute
         if(dt.s == 0) {                             // If next minute over
-           MY_TIME = dt_toEt(dt);                        // Datetime -> epoch time
-           ee_writeInt(MY_TIME, TIME_ADDRESS);                  // Store in EEPROM
+           MY_TIME = dt_toEt(dt);                   // Datetime -> epoch time
+           ee_writeInt(MY_TIME, TIME_ADDRESS);      // Store in EEPROM
            led(0, ON);                              // Indicate storing P27 LED
-           while(dt.s == 0) {                        // Wait for second 0 to finish                                        // to avoid multiple EE writes
-             dt = dt_get();                         // Check time
+           while(dt.s == 0) {                       // Wait for second 0 to finish
+             dt = dt_get();                         // to avoid multiple EE writes
          }
-         led(0, OFF);                             // Second over, P27 LED off
+         led(0, OFF);                               // Second over, P27 LED off
       }
         break;
     }
@@ -130,64 +114,67 @@ void P17_Check_In() {
 }
 
 void P27_PartToPart() {
-   clear();
 
+   // Prep to receive
    char received = 0;
    int irlenb = 0;
    memset(&theirID, 0, sizeof(theirID));
    memset(&theirAnswers, 0, sizeof(theirAnswers));
-
    irclear();
+
+   // Display to User
+   clear();
+   text_size(SMALL);
+   oledprint("Hold still\nplease!");
+
+   // Send info via IR
+   rgbs(GREEN, GREEN);
+   pause(2000);
+   rgbs(RED, RED);
+   irprint("%d%c%c%c%c", MY_ID, MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
+   rgbs(OFF, OFF);
+   pause(500);
+
+   // Look into IR Buffer for Response
+   irlenb = irscan("%d%c%c%c%c\n", &theirID, &theirAnswers[0], &theirAnswers[1], &theirAnswers[2], &theirAnswers[3]);
+   if (irlenb > 0) {
+      rgbs(CYAN, CYAN);
+      received = 1;
+      pause(200);
+      rgbs(OFF, OFF);
+   }
+
+   // If we got a message, do some processing
+   if (received == 1) {
+      // SAVE THE CONTACT
+      dt = dt_get();
+      MY_TIME = dt_toEt(dt);
+      storeContact(MY_TIME, theirID);
+
+      // Pick a random question
+      // Either picks a similarity or worst-case dissim.
+      short randIndex = rand() % NUM_QUESTIONS;
+      if (MY_ANSWERS[randIndex] != theirAnswers[randIndex]) {
+         for (short i = 0; i < NUM_QUESTIONS; i++) {
+            if (MY_ANSWERS[i] ==  theirAnswers[i]) {
+               randIndex = i;
+               break;
+            }
+         }
+      }
+
+      // Display results
+      clear();
       text_size(SMALL);
-
-     oledprint("Hold still\nplease!");
-     rgbs(GREEN, GREEN);
-     pause(2000);
-     rgbs(RED, RED);
-     irprint("%d%c%c%c%c", MY_ID, MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
-     rgbs(OFF, OFF);
-     pause(500);
-
-     irlenb = irscan("%d%c%c%c%c\n", &theirID, &theirAnswers[0], &theirAnswers[1], &theirAnswers[2], &theirAnswers[3]);
-     if (irlenb > 0) {
-        rgbs(YELLOW, YELLOW);
-        received = 1;
-        irclear();
-        pause(500);
-     }
-
-     rgbs(OFF, OFF);
-
-     if (received == 1) {
-
-        // SAVE THE CONTACT
-        dt = dt_get();                             // Get current system time
-        MY_TIME = dt_toEt(dt);                        // Datetime -> epoch time
-        storeContact(MY_TIME, theirID);
-
-        // PICK RANDOM QUESTION
-        short randIndex = rand() % NUM_QUESTIONS;
-
-        if (MY_ANSWERS[randIndex] != theirAnswers[randIndex]) {
-          for (short i = 0; i < NUM_QUESTIONS; i++) {
-           if (MY_ANSWERS[i] ==  theirAnswers[i]) {
-            randIndex = i;
-            break;
-           }
-          }
-        }
-
-        clear();
-        text_size(SMALL);
-
-        // No matches!
-        if (MY_ANSWERS[randIndex] != theirAnswers[randIndex]) {
+      // Display dissim
+      if (MY_ANSWERS[randIndex] != theirAnswers[randIndex]) {
                    //S              E
-          oledprint("They answered   ");
-        }
-        else {     //S              E
-          oledprint("Both answered   ");
-        }
+         oledprint("They answered   ");
+      }
+      // Display sim
+      else {     //S              E
+         oledprint("Both answered   ");
+      }
 
         //printf("MyTime: %d\n", MyTime);
         //printf("TheirID: %d\n", theirID);
@@ -196,17 +183,27 @@ void P27_PartToPart() {
         //print("Selected: %d", randIndex);
         //print(SURVEY_Q_ANSWERS[randIndex][theirAnswers[randIndex]]);
 
-        oledprint("%32s\n", SURVEY_Q_ANSWERS[randIndex][theirAnswers[randIndex]]);
-        oledprint(" to:\n");
-        oledprint(SURVEY_Q[randIndex]);
-        rotate180();
+      oledprint("%32s\n", SURVEY_Q_ANSWERS[randIndex][theirAnswers[randIndex]]);
+      oledprint(" to:\n");
+      oledprint(SURVEY_Q[randIndex]);
+      rotate180();   // Flip for private mode
 
-        pause(10000);
-     }
-     pause(500);
-     Display_Main_Menu();
+      pause(10000);
+   }
+   // Otherwise, no message received
+   else {
+      clear();
+      oledprint("No message      received.\n");
+      oledprint("Please try again");
+      pause(2000);
+   }
+   irclear();
+   Display_Main_Menu();
 }
 
+
+// Method to erase EEPROM.
+// You need to hold down 7 butons, so this should never happen.
 void All_OSH_Erase_EEPROM() {
   clear();
   oledprint("CONFIRM");
@@ -236,74 +233,56 @@ void All_OSH_Erase_EEPROM() {
   }
 }
 
-void P25_Upload_Contacts() {
-   clear();
-   text_size(SMALL);
-   oledprint("Upload  to      computer");
-   print_all_contacts();
-   oledprint("Done");
-   pause(250);
-   clear();
-   Display_Main_Menu();
-}
-
 /** HELPER METHODS **/
-void print_all_contacts() {
 
-  short currentCount = retrieveCount();
-
-  print("Current Contact Count: %d\n", currentCount);
-
-  unsigned int t;
-  short id;
-  int address = MEM_START_ADDRESS;
-
-  for(int i = 0; i < currentCount; i++)
-  {
-    address = retrieveContact(address, &t, &id);
-    print("%d, %d\n", t, id);
-  }
-}
-
+// Method to transmit all contacts via IR
 void irTxAll() {
-
-   short currentCount = retrieveCount();
-
+   // Comm variables
    int aTime;
    short anID;
-   unsigned int address = MEM_START_ADDRESS;
 
-   for(int i = 0; i < currentCount; i++)
-   {
-     memset(&aTime, 0, sizeof(aTime));        // Clear their variables
-     memset(&anID, 0, sizeof(anID));
-     address = retrieveContact(address, &aTime, &anID);
+   unsigned int address = MEM_START_ADDRESS;    // Get ready to read
+   short currentCount = retrieveCount();        // Get the current count
+
+   // For every contact
+   for(int i = 0; i < currentCount; i++) {
+      // Clear their variables
+      memset(&aTime, 0, sizeof(aTime));
+      memset(&anID, 0, sizeof(anID));
+
+      address = retrieveContact(address, &aTime, &anID); // Grab contact from memory
+
+      rgbs(RED, RED);
       clear();
       text_size(SMALL);
+      oledprint("SENDING...%d\n", i);
       oledprint("%d\n%d\n", aTime, anID);
-      pause(1000);
-     irprint("%d, %d\n", aTime, anID);
+      irprint("%d, %d\n", aTime, anID);
+      pause(200);
+      rgbs(OFF, OFF);
    }
-   // SEND TERMINATE clear();
-      text_size(SMALL);
-      oledprint("%d\n%d\n", TERMINATE, TERMINATE);
-      pause(1000);
+   // Send terminate command
+   clear();
+   text_size(SMALL);
+   oledprint("TERMINATE.");
    irprint("%d, %d\n", (int) TERMINATE, (short) TERMINATE);
+   pause(1000);
 }
 
+// Method to wait for a sever beacon until timeout
 void listenForServer() {
    int i = 0;
    int irlenb = 0;
    while(i < LISTENFORSERVER_TIMEOUT) {
-    rgbs(GREEN, GREEN);
-    memset(&serverID, 0, sizeof(serverID));        // Clear their variables
-    memset(&serverTime, 0, sizeof(serverTime));
-    memset(&theirName, 0, sizeof(theirName));
+      rgbs(GREEN, GREEN);
+      // Clear their variables
+      memset(&serverID, 0, sizeof(serverID));
+      memset(&serverTime, 0, sizeof(serverTime));
+      memset(&theirName, 0, sizeof(theirName));
 
-    irlenb = irscan("%d, %d, %32s", &serverTime, &serverID, &theirName);
-
-    if(strlen(theirName) > 0) {
-       rgbs(CYAN, CYAN);
+      irlenb = irscan("%d, %d, %32s", &serverTime, &serverID, &theirName);
+      if(strlen(theirName) > 0) {
+         rgbs(CYAN, CYAN);
    //    print("Heard from... id: %d ,", theirID);
 //       print("time: %d\n", serverTime);
          clear();
@@ -313,59 +292,68 @@ void listenForServer() {
          oledprint("Name: %32s", theirName);
          pause(1000);
 
-      if (serverID == BOOZE_WIZARD_ID) {
-         clear();
-         rgbs(RED, RED);
-         irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
-         irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
-         irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
-         irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
-         irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+         // Special case for BoozeWizard
+         if (serverID == BOOZE_WIZARD_ID) {
+            clear();
+            oledprint("HOLD\nSTILL");
+            rgbs(RED, RED);
+            pause(500);
+            // Send beacon to BoozeWizard
+            for (short j = 0; j < 3; j++) irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+            pause(500);
+            irTxAll();  // Transmit all data
+            rgbs(OFF, OFF);
+            return;  // Done, leave the method
+         }
+
+         // Otherwise, either TimeWizard or Server
+         dt_set(dt_fromEt(serverTime));   // Update time to server time
+
+         // Store interaction, send server beacon
+         if (serverID != TIME_WIZARD_ID) {
+            clear();
+            text_size(SMALL);
+            oledprint("Check-in at\n%d", serverID);
+            storeContact(serverTime, serverID);
+            sendBeacon();
+         }
+         // Otherwise, this is just a time update
+         else {
+            clear();
+            text_size(SMALL);
+            oledprint("Time Update!");
+         }
          pause(500);
-         oledprint("HOLD\nSTILL");
-         rgbs(RED, RED);
-         irTxAll();
-         clear();
          rgbs(OFF, OFF);
+         Display_Main_Menu();
          return;
       }
-
-       dt_set(dt_fromEt(serverTime));
-
-       if (serverID != TIME_WIZARD_ID) {
-          clear();
-          text_size(SMALL);
-          oledprint("Check-in at %d", serverID);
-          storeContact(serverTime, serverID);
-          sendBeacon();
-       }
-       else {
-          clear();
-          oledprint("Time Update!");
-       }
-       pause(500);
-       Display_Main_Menu();
-       return;
-    }
-    pause(50);
-    rgbs(OFF, OFF);
-
-    i += 1;
-  }
-  rgbs(OFF, OFF);
- return;
+      pause(50);
+      rgbs(OFF, OFF);
+      i += 1; // Continue listen loop
+   }
+   // If we're here, we never got anything.
+   rgbs(RED, RED);
+   clear();
+   text_size(SMALL);
+   oledprint("No check-in.\nPlease try again");
+   pause(1000);
+   rgbs(OFF, OFF);
+   return;
 }
 
+// Method to send an IR beacon to the server
 void sendBeacon() {
-  for(int i = 0; i < 5; i++) {
-    rgbs(RED, RED);
-    irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
-    text_size(SMALL);
-    clear();
-    oledprint("%d\n%d\n%32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
-    pause(100);
-    rgbs(OFF, OFF);
-  }
+   for(int i = 0; i < 5; i++) {
+      rgbs(RED, RED);
+      irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+
+      clear();
+      text_size(SMALL);
+      oledprint("%d\n%d\n%32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+      pause(100);
+      rgbs(OFF, OFF);
+   }
 }
 
 /**** DISPLAY METHODS ******/
@@ -374,7 +362,7 @@ void Display_Main_Menu() {
    text_size(LARGE);
    cursor(0, 0);
    oledprint("%s", MY_FIRST_NAME);
-   cursor(0,1);
+   cursor(0, 1);
    oledprint("%s", MY_LAST_NAME);
    //oledprint("%s", dates);               // Something to shift
    //screen_scrollRight(0, 15);                 // Scroll left-right
@@ -383,20 +371,20 @@ void Display_Main_Menu() {
 void Display_Private_SumStats(unsigned int *y) {
    clear();
    text_size(SMALL);
-   screen_auto(OFF);
+   screen_auto(OFF); // Disable update while we filp the screen
             //S              ES              E
    oledprint("You've checked  in at %d places.\n\n", retrieveServerCount());
    oledprint("You've met\n %d people!\n", retrieveUserCount());
-
    rotate180();
-   screen_update();
+   screen_update();  // UPDATE
 
+   // While in private mode, keep doin
    while (*y < -40) {
     *y = accel(AY);
     pause(20);
    }
-
+   // Exit
    clear();
-   screen_auto(ON);                          // Enable screen auto-update
+   screen_auto(ON);  // Renable screen auto-update
    Display_Main_Menu();
 }
