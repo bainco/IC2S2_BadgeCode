@@ -1,14 +1,21 @@
+/**
+participant-code.c
+@Author Connor Bain
+
+This class contains all of the main code for the IC2S2 electronic conference
+badges. It serves as the template for all conference attendee badges and includes
+the main menu, check-in, part-to-part comms, and saving data to EEPROM.
+*/
+
 #include "simpletools.h"                     // Include simpletools library
 #include "badgetools.h"                      // Include badgetools library
 #include "datetime.h"                        // Include datetime library
 #include "eeprom.h"                          // Include EEPROM library
 #include "survey.h"                          // Include Survey library
+#include "ID_Info.h"                         // Include ID info
 #include "part_strings.h"                    // Include Part Info
 
 /*** GLOBALS ***/
-short TIME_WIZARD_ID = 9999;
-short BOOZE_WIZARD_ID = 10000;
-short TERMINATE = 13;
 short LISTENFORSERVER_TIMEOUT = 100;
 
 // Variables for Time
@@ -40,6 +47,8 @@ void Display_Main_Menu();
 void Display_Private_SumStats(unsigned int *y);
 /** END FUNCTION DEFS **/
 
+
+/****** MAIN LOOP *****/
 void main() {
   badge_setup();                             // Call badge setup
 
@@ -200,7 +209,6 @@ void P27_PartToPart() {
    irclear();
    Display_Main_Menu();
 }
-
 
 // Method to erase EEPROM.
 // You need to hold down 7 butons, so this should never happen.

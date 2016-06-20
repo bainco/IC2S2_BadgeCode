@@ -2,9 +2,7 @@
 #include "badgetools.h"
 #include "fdserial.h"
 #include "eeprom.h"
-
-short BOOZE_WIZARD_ID = 10000;
-short TERMINATE = 13;
+#include "ID_Info.h"
 
 char handshake[5];
 fdserial* port;
@@ -146,12 +144,12 @@ while(1) {
 
    if (irlenb > 0) {
      rgbs(YELLOW, YELLOW);
-     
+
       clear();
       text_size(SMALL);
       oledprint("%d\n%d\n", aTime, anID);
       pause(1000);
-     
+
       if (aTime == TERMINATE && anID == TERMINATE) {
          irclear();
          return;
@@ -178,27 +176,27 @@ void Display_Main_Menu() {
 void upload_contacts(fdserial* port)
 {
   char sendString[32];
-  
+
   int c_count = retrieveCount();
   unsigned int address = MEM_START_ADDRESS;
-  
+
   sprintf(sendString, "%d,%d\n", c_count, theID);
-  
+
   oledprint("%32s\n", sendString);
 
   dprint(port, "txBegin\n");
   dprint(port, "%32s\n", sendString);
-  
+
   for (int i = 0; i < c_count; i++)
   {
     memset(&theirTime, 0, sizeof(theirTime));        // Clear their variables
     memset(&theirID, 0, sizeof(theirID));
     address = retrieveContact(address, &theirTime, &theirID);
-    
+
       text_size(SMALL);
       oledprint("%d\n%d\n", theirTime, theirID);
       //pause(1000);
-      
+
     sprintf(sendString, "%d,%d", theirTime, theirID);
 
     dprint(port, "%32s\n", sendString);
