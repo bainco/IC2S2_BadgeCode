@@ -21,6 +21,9 @@ Waits are used before a helper method
 
 /*** GLOBALS ***/
 short TIME_WIZARD_ID = 9999;
+short BOOZE_WIZARD_ID = 10000;
+
+short TERMINATE = 13;
 
 datetime dt;                                  // Date/teme values
 int MY_TIME;                                       // Epoch time value
@@ -262,6 +265,32 @@ void print_all_contacts() {
   }
 }
 
+void irTxAll() {
+
+   short currentCount = retrieveCount();
+
+   int aTime;
+   short anID;
+   unsigned int address = MEM_START_ADDRESS;
+
+   for(int i = 0; i < currentCount; i++)
+   {
+     memset(&aTime, 0, sizeof(aTime));        // Clear their variables
+     memset(&anID, 0, sizeof(anID));
+     address = retrieveContact(address, &aTime, &anID);
+      clear();
+      text_size(SMALL);
+      oledprint("%d\n%d\n", aTime, anID);
+      pause(1000);
+     irprint("%d, %d\n", aTime, anID);
+   }
+   // SEND TERMINATE clear();
+      text_size(SMALL);
+      oledprint("%d\n%d\n", TERMINATE, TERMINATE);
+      pause(1000);
+   irprint("%d, %d\n", (int) TERMINATE, (short) TERMINATE);
+}
+
 void listenForServer() {
    int i = 0;
    int irlenb = 0;
@@ -283,6 +312,23 @@ void listenForServer() {
          oledprint("Time: %d", serverTime);
          oledprint("Name: %32s", theirName);
          pause(1000);
+
+      if (serverID == BOOZE_WIZARD_ID) {
+         clear();
+         rgbs(RED, RED);
+         irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+         irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+         irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+         irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+         irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+         pause(500);
+         oledprint("HOLD\nSTILL");
+         rgbs(RED, RED);
+         irTxAll();
+         clear();
+         rgbs(OFF, OFF);
+         return;
+      }
 
        dt_set(dt_fromEt(serverTime));
 
@@ -340,7 +386,7 @@ void Display_Private_SumStats(unsigned int *y) {
    screen_auto(OFF);
             //S              ES              E
    oledprint("You've checked  in at %d places.\n\n", retrieveServerCount());
-   oledprint("You've met\n %d people!\n", retrieveServerCount());
+   oledprint("You've met\n %d people!\n", retrieveUserCount());
 
    rotate180();
    screen_update();

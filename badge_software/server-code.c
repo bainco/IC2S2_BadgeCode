@@ -10,7 +10,7 @@ int et;
 
 short TIME_WIZARD_ID = 9999;
 
-short MY_LOCATION_ID = 2;
+short MY_LOCATION_ID = 2001;
 char MY_NAME[32] = "KEYNOTE";
 
 short recentID = 0;
@@ -77,12 +77,10 @@ void listen( int et) {
 
 void sendBeacon(int et) {
 
-  int i = 10;
   clear();
   text_size(SMALL);
   oledprint("Time: %d\n", et);
   oledprint("ID: %d", MY_LOCATION_ID);
-  pause(1000);
   // rgbs(RED, RED);                          // Signal transmitting
    irprint("%d, %d, %32s", et, MY_LOCATION_ID, MY_NAME);
    //irprint("%d, %d", et, MY_LOCATION_ID); // Transmit epoch time
