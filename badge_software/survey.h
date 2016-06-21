@@ -8,8 +8,10 @@ Note: In text_size(SMALL), the display is 17 chars wide. Use:
 //S              E
 for spacing.
 */
-static const short NUM_QUESTIONS = 4;  // Number of questions in the survey`
-static const short NUM_ANSWERS = 5;    // Number of answers for each equestion
+
+#define NUM_QUESTIONS ((short) 4) // Number of questions in the survey
+#define NUM_ANSWERS ((short) 5)   // Number of answers for each equestion
+  
 
 // Array for all of the survey questions
 const char SURVEY_Q[NUM_QUESTIONS][64] = {

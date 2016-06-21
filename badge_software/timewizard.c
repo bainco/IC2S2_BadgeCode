@@ -7,7 +7,7 @@
 /*** GLOBALS ***/
 short TIME_WIZARD_ID = 9999;
 
-datetime dt = {2016, 6, 17, 5, 5, 00};                        // Convert from epoch to datetime
+datetime dt = {2016, 6, 20, 22, 29, 00};                        // Convert from epoch to datetime
                            // Date/teme values
 int MY_TIME;                                       // Epoch time value
 char dates[9];                                // Date string
@@ -152,7 +152,7 @@ void listenForServer() {
    int irlenb = 0;
    while(i < LISTENFORSERVER_TIMEOUT) {
     rgbs(GREEN, GREEN);
-    memset(&theirID, 0, sizeof(serverID));        // Clear their variables
+    memset(&serverID, 0, sizeof(serverID));        // Clear their variables
     memset(&serverTime, 0, sizeof(serverTime));
     memset(&serverName, 0, sizeof(serverName));
 

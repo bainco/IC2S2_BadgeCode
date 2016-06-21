@@ -21,4 +21,4 @@ int storeContact(int timeVal, short idVal);  // Method to store a contact
 short retrieveCount();               // Method to return total interaction count
 short retrieveUserCount();           // Method to retrieve user interaction count
 short retrieveServerCount();         // Method to retrieve server interaction count
-int retrieveContact(unsigned int addr, int *timeVal, short *idVal);   // Method to retrieve a contact
+unsigned int retrieveContact(unsigned int addr, int *timeVal, short *idVal);   // Method to retrieve a contact

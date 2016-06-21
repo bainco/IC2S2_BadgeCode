@@ -13,9 +13,7 @@ short theirID;
 char theirName[32];
 int theirTime;
 
-
 short theID;
-
 short anID;
 int aTime;
 
@@ -29,25 +27,23 @@ void Display_Main_Menu();
 
 void main() {
 
-  badge_setup();
-  simpleterm_close();
-  oledprint("ERASING CONTACTS");
-  contacts_eraseAll();
-  CLKLIMIT = CLKFREQ * 2;
+   badge_setup();
+   simpleterm_close();
+   oledprint("ERASING CONTACTS");
+   contacts_eraseAll();
+   CLKLIMIT = CLKFREQ * 2;
 
-  // Connection to host routine (FORCE CONNECTION TO HOST)
-  port = fdserial_open(31, 30, 0, 115200);
-  text_size(SMALL);
-  cursor(2, 4);
-  oledprint("Connecting...");
-  while(1)
-  {
-    dprint(port, "Propeller\n");
-    pause(1000);  // We need this pause, since the host needs time to respond. 5 x 1 second = 10 second timeout
-    if (fdserial_rxCount(port) == 0)
-    {
+   // Connection to host routine (FORCE CONNECTION TO HOST)
+   port = fdserial_open(31, 30, 0, 115200);
+   text_size(SMALL);
+   cursor(2, 4);
+   oledprint("Connecting...");
+   while(1) {
+   dprint(port, "Propeller\n");
+   pause(1000);  // We need this pause, since the host needs time to respond. 5 x 1 second = 10 second timeout
+   if (fdserial_rxCount(port) == 0){
       continue;
-    }
+   }
     else if (fdserial_rxCount(port) < 5)
     {
       fdserial_rxFlush(port);
@@ -148,7 +144,7 @@ while(1) {
       clear();
       text_size(SMALL);
       oledprint("%d\n%d\n", aTime, anID);
-      pause(1000);
+      pause(100);
 
       if (aTime == TERMINATE && anID == TERMINATE) {
          irclear();
@@ -193,6 +189,7 @@ void upload_contacts(fdserial* port)
     memset(&theirID, 0, sizeof(theirID));
     address = retrieveContact(address, &theirTime, &theirID);
 
+      clear();
       text_size(SMALL);
       oledprint("%d\n%d\n", theirTime, theirID);
       //pause(1000);

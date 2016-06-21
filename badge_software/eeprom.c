@@ -72,7 +72,7 @@ int storeContact(int timeVal, short idVal) {
    // Otherwise, we've got a out of memory problem
    else {
       clear();
-      oledprint("ERROR!\n");
+      oledprint("EEPROM ERROR!\n");
       pause(1000);
    }
    return addr;
@@ -91,7 +91,7 @@ Method to retrieve the user interaction count.
 short retrieveUserCount() {
    // If no count is stored, initialize
    if (ee_readShort(USER_COUNT_ADDRESS) == -1) {
-     storeServerCount(0);
+     storeUserCount(0);
    }
    return ee_readShort(USER_COUNT_ADDRESS);
 }
@@ -110,7 +110,6 @@ short retrieveServerCount() {
    }
    return ee_readShort(SERVER_COUNT_ADDRESS);
 }
-
 
 /** retrieveCount()
 

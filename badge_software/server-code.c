@@ -14,15 +14,15 @@ the main menu, check-in comms, and saving data to EEPROM.
 #include "ID_Info.h"       // Include ID Info
 
 /***** UNIQUE GLOBALS *****/
-short MY_LOCATION_ID = 2001;     // SERVER ID
-char MY_NAME[32] = "KEYNOTE";    // SERVER NAME (7 chars wide)
+short MY_LOCATION_ID = 2002;     // SERVER ID
+char MY_NAME[32] = "SESSION";    // SERVER NAME (7 chars wide)
 /*** END UNIQUE GLOBALS ***/
 
 /***** GLOBAL VARIABLES *****/
 sound *audio;  // Pointer for audio process
 
 // Time Variables
-datetime dt = {2016, 5, 10, 5, 5, 00}; // Date time object
+datetime dt = {2016, 6, 20, 22, 27, 00}; // Date time object
 int et;                                // Epoch time
 
 // Comm Variables
@@ -38,6 +38,10 @@ int states;
 /***** FUNCTION DEFS *****/
 void sendBeacon( int et);
 void listen( int et);
+void Display_Main_Menu();
+void All_OSH_Erase_EEPROM();
+void P25_Upload_To_Computer();
+void print_all_contacts();
 /*** END FUNCTION DEFS ***/
 
 /****** MAIN LOOP *****/
@@ -49,6 +53,7 @@ void main() {
    sound_volume(audio, 0, 100);   // Set channel volumes
 
    Display_Main_Menu();
+   irclear();
    while (1) {
       states = buttons();
       switch(states) {                         // Handle button press
@@ -63,10 +68,9 @@ void main() {
 
     dt = dt_get();
     et = dt_toEt(dt); // Convert from date time to epoch time
-  //  irclear();
     sendBeacon(et);
     listen(et);
-    pause(50);
+    pause(100);
   }
 }
 /****** END MAIN LOOP *****/
@@ -122,23 +126,23 @@ void All_OSH_Erase_EEPROM() {
 
 /***** HELPER FUNCTIONS *****/
 void listen(int et) {
+  
+   int irlenb = 0;
    // Clear "their" variables
    memset(&theirID, 0, sizeof(theirID));
    memset(&theirName, 0, sizeof(theirName));
    memset(&theirTime, 0, sizeof(theirTime));
+        rgbs(YELLOW, YELLOW);
 
    // Check IR buffer for messages
-   irscan("%d, %d, %32s", &theirID, &theirTime, &theirName);
-   if(strlen(theirName) > 0) {
-      //print("Heard from... id: %d ", theirID);
-      //print("name: %s\n", theirName);
-      //print("Time: %d\n", theirTime);
-
+   irlenb = irscan("%d, %d, %32s\n", &theirID, &theirTime, &theirName);
+   if(irlenb > 0) {
       // It might just be the TimeWizard. If so, update time.
       if (theirID == TIME_WIZARD_ID) {
          clear();
          oledprint("UPDATE\nTIME");
          dt_set(dt_fromEt(theirTime));
+         recentID = theirID;
       }
 
       // Otherwise, if we haven't just heard from them, record the interaction.
@@ -146,43 +150,35 @@ void listen(int et) {
          recentID = theirID;        // Update recentID
          storeContact(et, theirID); // Store the contact in EEPROM
 
-         //print("Saving... timestamp: %d, id: %d\n", et, theirID);
-
          // Welcome the user (audio too)
          rgbs(CYAN, CYAN);
          clear();
-         oledprint("Welcome  %s", theirName);
-         oledprint("ID: %d", theirID);
-         sound_note(audio, 0, E5);                    // Play first note with ch 0
-         pause(500);
-         sound_note(audio, 0, C5);                    // Play first note with ch 0
-         pause(500);
-         sound_note(audio, 0, 0);                    // Play first note with ch 0
+         text_size(LARGE);
+         cursor(0, 0);
+         oledprint("Welcome\n");
+         cursor(0, 1);
+         oledprint("%s", theirName);
       }
       // Otherwise, we just saw them. Welcome, but not too friendly
       else {
          rgbs(YELLOW, YELLOW);
          clear();
-         oledprint("Hi again\n%s", theirName);
-         sound_note(audio, 0, E5);                    // Play first note with ch 0
-         pause(500);
-         sound_note(audio, 0, 0);                    // Play first note with ch 0
+         text_size(LARGE);
+         cursor(0,0);
+         oledprint("Welcome\n");
+         cursor(0, 1);
+         oledprint("%s", theirName);
       }
       // Pause and go back to display
       pause(1000);
       Display_Main_Menu();
+      irclear();
    }
 }
 
 // Method to send the server beacon
-void sendBeacon(int et) {
-   clear();
-   //text_size(SMALL);
-   // oledprint("Time: %d\n", et);
-   // oledprint("ID: %d", MY_LOCATION_ID);
-   // rgbs(RED, RED);                          // Signal transmitting
+void sendBeacon(int et) {                      // Signal transmitting
    irprint("%d, %d, %32s", et, MY_LOCATION_ID, MY_NAME);
-   //irprint("%d, %d", et, MY_LOCATION_ID); // Transmit epoch time
    rgbs(OFF, OFF);                          // Finish transmitting
 }
 

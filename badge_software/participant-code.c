@@ -138,14 +138,19 @@ void P27_PartToPart() {
 
    // Send info via IR
    rgbs(GREEN, GREEN);
-   pause(2000);
+   pause(1000);
    rgbs(RED, RED);
-   irprint("%d%c%c%c%c", MY_ID, MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
+   clear();
+   for (int i = 0; i < 2; i++) {
+      oledprint("%d,%d,%d,%d,%d\n", MY_ID, MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
+      irprint("%d,%d,%d,%d,%d\n", MY_ID, MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
+      pause(100);
+   }
    rgbs(OFF, OFF);
    pause(500);
 
    // Look into IR Buffer for Response
-   irlenb = irscan("%d%c%c%c%c\n", &theirID, &theirAnswers[0], &theirAnswers[1], &theirAnswers[2], &theirAnswers[3]);
+   irlenb = irscan("%d,%d,%d,%d,%d\n", &theirID, &theirAnswers[0], &theirAnswers[1], &theirAnswers[2], &theirAnswers[3]);
    if (irlenb > 0) {
       rgbs(CYAN, CYAN);
       received = 1;
@@ -184,13 +189,6 @@ void P27_PartToPart() {
       else {     //S              E
          oledprint("Both answered   ");
       }
-
-        //printf("MyTime: %d\n", MyTime);
-        //printf("TheirID: %d\n", theirID);
-        //printf("MyAnswers: %d %d %d %d\n", MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
-        //printf("TheirAnswers: %d %d %d %d\n", theirAnswers[0], theirAnswers[1], theirAnswers[2], theirAnswers[3]);
-        //print("Selected: %d", randIndex);
-        //print(SURVEY_Q_ANSWERS[randIndex][theirAnswers[randIndex]]);
 
       oledprint("%32s\n", SURVEY_Q_ANSWERS[randIndex][theirAnswers[randIndex]]);
       oledprint(" to:\n");
@@ -266,7 +264,7 @@ void irTxAll() {
       oledprint("SENDING...%d\n", i);
       oledprint("%d\n%d\n", aTime, anID);
       irprint("%d, %d\n", aTime, anID);
-      pause(200);
+      pause(100);
       rgbs(OFF, OFF);
    }
    // Send terminate command
@@ -290,15 +288,14 @@ void listenForServer() {
 
       irlenb = irscan("%d, %d, %32s", &serverTime, &serverID, &theirName);
       if(strlen(theirName) > 0) {
+         irclear();
          rgbs(CYAN, CYAN);
-   //    print("Heard from... id: %d ,", theirID);
-//       print("time: %d\n", serverTime);
          clear();
          text_size(SMALL);
          oledprint("ID: %d\n", serverID);
          oledprint("Time: %d", serverTime);
          oledprint("Name: %32s", theirName);
-         pause(1000);
+         pause(200);
 
          // Special case for BoozeWizard
          if (serverID == BOOZE_WIZARD_ID) {
@@ -307,8 +304,11 @@ void listenForServer() {
             rgbs(RED, RED);
             pause(500);
             // Send beacon to BoozeWizard
-            for (short j = 0; j < 3; j++) irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
-            pause(500);
+            for (short j = 0; j < 3; j++) {
+                irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+                pause(500);
+             }
+            pause(200);
             irTxAll();  // Transmit all data
             rgbs(OFF, OFF);
             return;  // Done, leave the method
@@ -352,14 +352,14 @@ void listenForServer() {
 
 // Method to send an IR beacon to the server
 void sendBeacon() {
-   for(int i = 0; i < 5; i++) {
+   for(int i = 0; i < 3; i++) {
       rgbs(RED, RED);
-      irprint("%d, %d, %32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
+      irprint("%d, %d, %32s", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
 
       clear();
       text_size(SMALL);
       oledprint("%d\n%d\n%32s\n", MY_ID, dt_toEt(dt), MY_FIRST_NAME);
-      pause(100);
+      pause(500);
       rgbs(OFF, OFF);
    }
 }
