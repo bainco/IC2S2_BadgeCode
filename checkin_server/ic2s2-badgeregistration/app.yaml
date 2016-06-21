@@ -1,5 +1,5 @@
 application: ic2s2-badgeregistration
-version: 1
+version: 2
 runtime: python27
 api_version: 1
 threadsafe: yes
@@ -14,6 +14,9 @@ handlers:
 
 - url: /data
   static_dir: data
+
+- url: /js
+  static_dir: js
 
 - url: .*
   script: main.app

@@ -2,6 +2,7 @@
 {% block title %}{{ title }}{% endblock %}
 {% block header %}{{ header }}{% endblock %}
 {% block content %}
+<script src="/js/jquery-csv.js"></script>
 <script>
 $(document).ready(function() {
   $.ajax({
@@ -14,15 +15,18 @@ $(document).ready(function() {
 
 var projects = [];
 function processData(myTxt) {
-    var myLines = myTxt.split(/\r\n|\n/);
+
+    myLines = $.csv.toArrays(myTxt)
+    //var myLines = myTxt.split(/\r\n|\n/);
     for (var i=0; i < myLines.length; i++) {
-         entries = myLines[i].split(",")
-         var lastEntry = "";
-         for (var j = 2; j < entries.length; j++) {
-            lastEntry += entries[j];
-         }
-         lastEntry = lastEntry.replace(/"/g, "");
-          projects.push({value: entries[0], firstName:entries[0], lastName: entries[1], position: lastEntry});
+         entries = myLines[i];
+         //entries = myLines[i].split(",")
+         //var lastEntry = "";
+         //for (var j = 2; j < entries.length; j++) {
+         //   lastEntry += entries[j];
+         //}
+         //lastEntry = lastEntry.replace(/"/g, "");
+          projects.push({value: entries[0], firstName:entries[0], lastName: entries[1], email:entries[2], position: entries[3], affiliation: entries[4]});
     }
 
        $( "#firstName" ).autocomplete({
@@ -36,14 +40,15 @@ function processData(myTxt) {
           $( "#firstName" ).val( ui.item.firstName );
           //$( "#project-id" ).val( ui.item.value );
           $( "#lastName" ).val( ui.item.lastName );
+          $( "#email" ).val(ui.item.email);
           $( "#position" ).val(ui.item.position);
-
+          $( "#affiliation" ).val(ui.item.affiliation);
           return false;
          }
        })
        .autocomplete( "instance" )._renderItem = function( ul, item ) {
          return $( "<li>" )
-          .append( "<a style=\"font-size:8pt;\">" + item.firstName + " " + item.lastName + ", " + item.position + "</a>" )
+          .append( "<a style=\"font-size:8pt;\">" + item.firstName + " " + item.lastName +", " + item.position + "<br>" + item.email + "</a>" )
           .appendTo( ul );
        };
 }
@@ -60,8 +65,14 @@ function processData(myTxt) {
     <input class="form-field" type="text" id="firstName" name="firstName" /><br/>
     <div class="form-title">Last Name</div>
     <input class="form-field" type="text" id="lastName" name="lastName"/><br/>
+    <div class="form-title">Email</div>
+    <input class="form-field" type="text" id="email" name="email"/><br/>
     <div class="form-title">Job Title</div>
     <input class="form-field" type="text" id="position" name="position"/><br/>
+    <div class="form-title">Affiliation</div>
+    <input class="form-field" type="text" id="affiliation" name="affiliation"/><br/>
+    <div class="form-title">Most Recent Degree</div>
+    <input class="form-field" type="text" id="degree" name="degree"/><br/>
     <div class="form-title">Which type of fame would you most prefer?</div>
      <input type="radio" name="survey_answer0" value="0" checked> Having 1,000,000 followers on YouTube<br>
      <input type="radio" name="survey_answer0" value="1"> Having a TED talk<br>

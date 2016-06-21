@@ -12,7 +12,7 @@ function showNextButton() {
     setTimeout(function(){
       document.getElementById("waitText").setAttribute("style", "display: none;");
       document.getElementById("nextButton").setAttribute("style", "display: block;");
-    }, 10000);
+   }, 13000);
 }
 </script>
 <div class="displaybox">
@@ -23,8 +23,14 @@ function showNextButton() {
     <input class="form-field" type="text" name="firstName" value="{{ firstName }}" /><br/>
     <div class="form-title">Last Name</div>
     <input class="form-field" type="text" name="lastName" value="{{ lastName }}" /><br/>
+    <div class="form-title">Email</div>
+    <input class="form-field" type="text" name="email" value="{{ email }}"/><br/>
     <div class="form-title">Job Title</div>
     <input class="form-field" type="text" name="position" value="{{ position }}" /><br/>
+    <div class="form-title">Affiliation</div>
+    <input class="form-field" type="text" name="affiliation" value="{{ affiliation }}"/><br/>
+    <div class="form-title">Most Recent Degree</div>
+    <input class="form-field" type="text" id="degree" value="{{ degree }}"/><br/>
     <!-- <label for="badgeID">BadgeID: {{ badgeID }}</label><input type="hidden" label="badgeID" value={{ badgeID }} readonly /></br> -->
     <div class="submit-container">
     <input class="submit-button" type="submit" value="CONFIRM AND BURN TO BADGE" onclick="showNextButton()" />

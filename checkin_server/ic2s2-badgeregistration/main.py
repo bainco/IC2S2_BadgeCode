@@ -30,7 +30,10 @@ class Attendee(ndb.Model):
     badgeID = ndb.IntegerProperty(required=True)
     firstName = ndb.StringProperty(required=True)
     lastName = ndb.StringProperty(required=True)
+    email = ndb.StringProperty(required=True)
     position = ndb.StringProperty(required=True)
+    affiliation = ndb.StringProperty(required=True)
+    degree = ndb.StringProperty(required=False)
     survey_answer0 = ndb.IntegerProperty(required=True)
     survey_answer1 = ndb.IntegerProperty(required=True)
     survey_answer2 = ndb.IntegerProperty(required=True)
@@ -74,11 +77,16 @@ class DownloadHandler(MyHandler):
 
         firstName = self.request.get('firstName')
         lastName = self.request.get('lastName')
+        email = self.request.get('email')
         position = self.request.get('position')
+        affiliation = self.request.get('affiliation')
+        degree = self.request.get('degree')
 
         firstName = ''.join(filter(lambda x: x in printable, firstName))
         lastName = ''.join(filter(lambda x: x in printable, lastName))
         position = ''.join(filter(lambda x: x in printable, position))
+        affiliation = ''.join(filter(lambda x: x in printable, affiliation))
+        degree = ''.join(filter(lambda x: x in printable, degree))
 
         survey_answer0 = int(self.request.get('survey_answer0'))
         survey_answer1 = int(self.request.get('survey_answer1'))
@@ -91,7 +99,7 @@ class DownloadHandler(MyHandler):
         else:
             badgeID = 1000
 
-        theAttendee = Attendee(badgeID = badgeID, firstName = firstName, lastName = lastName, position = position, survey_answer0 = survey_answer0, survey_answer1 = survey_answer1, survey_answer2 = survey_answer2, survey_answer3 = survey_answer3)
+        theAttendee = Attendee(badgeID = badgeID, firstName = firstName, lastName = lastName, email = email, position = position, affiliation = affiliation, degree=degree, survey_answer0 = survey_answer0, survey_answer1 = survey_answer1, survey_answer2 = survey_answer2, survey_answer3 = survey_answer3)
 
         attendeeKey = theAttendee.put()
         url_string = attendeeKey.urlsafe()
@@ -105,6 +113,7 @@ class DownloadHandler(MyHandler):
         theAttendee = attendeeKey.get()
 
         fileName = str(theAttendee.lastName).replace(" ", "_")
+        fileName = fileName.replace("'", "_")
 
         self.response.headers['Content-Type'] = 'application/octet-stream'
         self.response.headers["Content-Disposition"] = 'attachment; filename=' + str(fileName) + '.h'
@@ -119,7 +128,11 @@ class AttendeeHandler(MyHandler):
         self.setup()
         firstName = self.request.get('firstName')
         lastName = self.request.get('lastName')
+        email = self.request.get('email')
+        affiliation = self.request.get('affiliation')
         position = self.request.get('position')
+        degree = self.request.get('degree')
+
         survey_answer0 = int(self.request.get('survey_answer0'))
         survey_answer1 = int(self.request.get('survey_answer1'))
         survey_answer2 = int(self.request.get('survey_answer2'))
@@ -127,9 +140,10 @@ class AttendeeHandler(MyHandler):
 
         self.templateValues['firstName'] = firstName
         self.templateValues['lastName'] = lastName
-
+        self.templateValues['email'] = email
         self.templateValues['position'] = position
-        logging.info(self.templateValues['position'])
+        self.templateValues['affiliation'] = affiliation
+        self.templateValues['degree'] = degree
 
         self.templateValues['survey_answer0'] = survey_answer0
         self.templateValues['survey_answer1'] = survey_answer1
