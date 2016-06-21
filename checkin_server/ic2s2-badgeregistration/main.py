@@ -18,6 +18,7 @@ import webapp2
 import jinja2
 import logging
 import os
+import string
 from google.appengine.ext import ndb
 
 jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/templates"))
@@ -64,14 +65,21 @@ class DownloadHandler(MyHandler):
         lineFName = "const char MY_FIRST_NAME[32] = \"" + firstName +"\";\n"
         lineLName = "const char MY_LAST_NAME[32] = \"" + lastName +"\";\n"
 
-        lineSAnswers = "const unsigned short MY_ANSWERS[NUM_QUESTIONS] = {" + str(survey_answer0) + "," + str(survey_answer1) + "," + str(survey_answer2) + "," + str(survey_answer3) + "};\n"
+        lineSAnswers = "const short MY_ANSWERS[NUM_QUESTIONS] = {" + str(survey_answer0) + "," + str(survey_answer1) + "," + str(survey_answer2) + "," + str(survey_answer3) + "};\n"
 
         return (lineTime + lineID + lineFName + lineLName + lineSAnswers)
 
     def post(self, num):
+        printable = set(string.printable)
+
         firstName = self.request.get('firstName')
         lastName = self.request.get('lastName')
         position = self.request.get('position')
+
+        firstName = ''.join(filter(lambda x: x in printable, firstName))
+        lastName = ''.join(filter(lambda x: x in printable, lastName))
+        position = ''.join(filter(lambda x: x in printable, position))
+
         survey_answer0 = int(self.request.get('survey_answer0'))
         survey_answer1 = int(self.request.get('survey_answer1'))
         survey_answer2 = int(self.request.get('survey_answer2'))
@@ -93,14 +101,13 @@ class DownloadHandler(MyHandler):
 
     def get(self, keyURL):
         self.setup()
-        logging.info(keyURL)
         attendeeKey = ndb.Key(urlsafe=keyURL)
         theAttendee = attendeeKey.get()
-        logging.info(theAttendee)
-        logging.info(theAttendee.firstName)
+
+        fileName = str(theAttendee.lastName).replace(" ", "_")
 
         self.response.headers['Content-Type'] = 'application/octet-stream'
-        self.response.headers["Content-Disposition"] = 'attachment; filename=' + str(theAttendee.lastName) + '.h'
+        self.response.headers["Content-Disposition"] = 'attachment; filename=' + str(fileName) + '.h'
         self.response.headers['Cache-Control'] = 'no-cache'
 
         header_string = self.generate_header(theAttendee.badgeID, theAttendee.firstName, theAttendee.lastName, theAttendee.survey_answer0, theAttendee.survey_answer1, theAttendee.survey_answer2, theAttendee.survey_answer3)
@@ -113,7 +120,6 @@ class AttendeeHandler(MyHandler):
         firstName = self.request.get('firstName')
         lastName = self.request.get('lastName')
         position = self.request.get('position')
-        logging.info(position)
         survey_answer0 = int(self.request.get('survey_answer0'))
         survey_answer1 = int(self.request.get('survey_answer1'))
         survey_answer2 = int(self.request.get('survey_answer2'))
