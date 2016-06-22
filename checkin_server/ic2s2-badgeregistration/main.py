@@ -57,8 +57,7 @@ class MainHandler(MyHandler):
         self.render('main.html')
 
 class DownloadHandler(MyHandler):
-
-    def fixNames(tempLastName, tempFirstName):
+    def fixNames(self, tempLastName, tempFirstName):
         while (len(tempFirstName) < len(tempLastName)):
             tempFirstName = tempFirstName + " "
 
