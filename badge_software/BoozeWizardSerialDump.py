@@ -101,6 +101,8 @@ try:
 
         num_records = int(firstComm[0])
         theirID = int(firstComm[1])
+        print firstComm[1]
+        print int(firstComm[1])
 
         print "Data from " + str(theirID) + ".\n"
         print "Expecting " + str(num_records) + " records.\n"

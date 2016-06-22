@@ -7,7 +7,7 @@
 /*** GLOBALS ***/
 short TIME_WIZARD_ID = 9999;
 
-datetime dt = {2016, 6, 20, 22, 29, 00};                        // Convert from epoch to datetime
+datetime dt = {2016, 6, 22, 0, 14, 00};                        // Convert from epoch to datetime
                            // Date/teme values
 int MY_TIME;                                       // Epoch time value
 char dates[9];                                // Date string
@@ -29,7 +29,7 @@ void sendServerBeacon();
 void sendServerBeacon() {
 
   // rgbs(RED, RED);                          // Signal transmitting
-   irprint("%d, %d, %32s", dt_toEt(dt_get()), TIME_WIZARD_ID, "TIME WIZARD"); // Transmit epoch time
+   irprint("%d,%d,%32s", dt_toEt(dt_get()), TIME_WIZARD_ID, "TIME WIZARD"); // Transmit epoch time
    rgbs(OFF, OFF);                          // Finish transmitting
 }
 
@@ -38,10 +38,10 @@ void Display_Private_SumStats(unsigned int *y);
 
 void P27_PartToPart() {
    short i = 0;
-   while (i < 10) {
+   while (i < 5) {
       irclear();
       sendServerBeacon();
-      pause(50);
+      pause(200);
       i += 1;
    }
    Display_Main_Menu();
@@ -50,16 +50,6 @@ void P27_PartToPart() {
 void main()                                  // Main function
 {
   badge_setup();                             // Call badge setup
-
-  MY_TIME = ee_readInt(TIME_ADDRESS);        // Get most recent time
-
-  if (MY_TIME == -1) {
-      ee_writeInt(dt_toEt(dt), TIME_ADDRESS);
-  }
-
-  else {
-      dt = dt_fromEt(MY_TIME);
-  }
 
   dt_run(dt);                                 // Use to start system timer
 
@@ -156,8 +146,7 @@ void listenForServer() {
     memset(&serverTime, 0, sizeof(serverTime));
     memset(&serverName, 0, sizeof(serverName));
 
-
-    irlenb = irscan("%d, %d, %32s", &serverTime, &serverID, &serverName);
+    irlenb = irscan("%d,%d,%32s", &serverTime, &serverID, &serverName);
 
     if(irlenb > 0) {
        rgbs(CYAN, CYAN);
@@ -178,11 +167,11 @@ void listenForServer() {
 void sendBeacon() {
   for(int i = 0; i < 5; i++) {
     rgbs(RED, RED);
-    irprint("%d, %d, %32s", TIME_WIZARD_ID, dt_toEt(dt_get()), "TIME WIZARD");
+    irprint("%d,%d,%32s", TIME_WIZARD_ID, dt_toEt(dt_get()), "TIME WIZARD");
     clear();
     text_size(SMALL);
     oledprint("%d", dt_toEt(dt_get()));
-    pause(1000);
+    pause(500);
     rgbs(OFF, OFF);
   }
 }
@@ -192,9 +181,9 @@ void Display_Main_Menu() {
    clear();
    text_size(LARGE);
    cursor(0, 0);
-   oledprint("%d", TIME_WIZARD_ID);
+   oledprint("CONNOR");
    cursor(0,1);
-   oledprint("BAIN");
+   oledprint("BAIN, TW");
 }
 
 void Display_Private_SumStats(unsigned int *y) {

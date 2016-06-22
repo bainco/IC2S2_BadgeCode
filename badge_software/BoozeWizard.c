@@ -9,12 +9,11 @@ fdserial* port;
 
 unsigned int CLKLIMIT;
 
-short theirID;
+int theirID;
 char theirName[32];
 int theirTime;
 
-short theID;
-short anID;
+int anID;
 int aTime;
 
 void upload_contacts(fdserial* port);
@@ -30,7 +29,11 @@ void main() {
    badge_setup();
    simpleterm_close();
    oledprint("ERASING CONTACTS");
-   contacts_eraseAll();
+   //contacts_eraseAll();
+
+   storeUserCount(0);
+   storeServerCount(0);
+
    CLKLIMIT = CLKFREQ * 2;
 
    // Connection to host routine (FORCE CONNECTION TO HOST)
@@ -61,60 +64,32 @@ void main() {
 
   irclear();
   while(1) {
-    rgb(L, OFF);
-    rgb(R, OFF);
-
     sendBeacon();
     listen(port);
-    pause(50);
   }
 }
 
-
-/**
-
-WHAT IS THIS?
-
-if (CNT - t > CLKLIMIT)
-{
-clear();
-text_size(LARGE);
-cursor(0, 0);
-oledprint(" ERROR");
-text_size(SMALL);
-cursor(0, 6);
-oledprint("Please try again");
-dprint(port, "txBegin\n");
-dprint(port, "Timeout\n");
-contacts_clearAll();
-pause(2000);
-clear();
-break;
-}
-
-
-
-
-
-*/
-
 void listen(fdserial* port) {
-        memset(&theID, 0, sizeof(theID));        // Clear their variables
+  irclear();
+  pause(1000);
+   int irlenb = 0;
+        memset(&theirID, 0, sizeof(theirID));        // Clear their variables
         memset(&theirName, 0, sizeof(theirName));        // Clear their variables
         memset(&theirTime, 0, sizeof(theirTime));        // Clear their variables
 
         //rgbs(GREEN, GREEN);                          // Signal transmitting
-        irscan("%d, %d, %32s", &theID, &theirTime, &theirName);
+        irlenb = irscan("%d,%d,%s", &theirID, &theirTime, &theirName);
 
-        if(strlen(theirName) > 0) {
+        if(irlenb > 0) {
           //print("Heard from... id: %d ", theirID);
           //print("name: %s\n", theirName);
           //print("Time: %d\n", theirTime);
+           irclear();
            rgbs(CYAN, CYAN);
            clear();
-           oledprint("Welcome  %s", theirName);
            text_size(SMALL);
-           pause(500);
+           oledprint("%d,%d,%s", theirID, theirTime, theirName);
+           pause(1000);
            clear();
            oledprint("PLEASE HOLD STILL");
            // GO INTO FULL TIME LISTENING MODE
@@ -133,11 +108,11 @@ void listen(fdserial* port) {
 
 void listen_for_all() {
    int irlenb = 0;
-while(1) {
    memset(&aTime, 0, sizeof(aTime));        // Clear their variables
    memset(&anID, 0, sizeof(anID));
-   irlenb = irscan("%d, %d\n", &aTime, &anID);
-
+while(1) {
+   irlenb = 0;
+   irlenb = irscan("%d,%d", &aTime, &anID);
    if (irlenb > 0) {
      rgbs(YELLOW, YELLOW);
 
@@ -150,14 +125,14 @@ while(1) {
          irclear();
          return;
       }
-      storeContact(aTime, anID);
+      storeContact(aTime, (short) anID);
       rgbs(OFF, OFF);
    }
 }
 }
 
 void sendBeacon(int et) {
-   irprint("%d, %d, %32s", et, BOOZE_WIZARD_ID, "BOOZE WIZARD");
+   irprint("%d,%d,%32s", 0, BOOZE_WIZARD_ID, "BOOZE WIZARD");
    //irprint("%d, %d", et, MY_LOCATION_ID); // Transmit epoch time
    rgbs(OFF, OFF);                          // Finish transmitting
 }
@@ -173,32 +148,28 @@ void upload_contacts(fdserial* port)
 {
   char sendString[32];
 
-  int c_count = retrieveCount();
+  short c_count = retrieveCount();
   unsigned int address = MEM_START_ADDRESS;
 
-  sprintf(sendString, "%d,%d\n", c_count, theID);
+  sprintf(sendString, "%d,%d\n", (int) c_count, (int) theirID);
 
+  clear();
   oledprint("%32s\n", sendString);
-
+  pause(1000);
   dprint(port, "txBegin\n");
   dprint(port, "%32s\n", sendString);
 
-  for (int i = 0; i < c_count; i++)
+  for (short i = 0; i < c_count; i++)
   {
-    memset(&theirTime, 0, sizeof(theirTime));        // Clear their variables
-    memset(&theirID, 0, sizeof(theirID));
-    address = retrieveContact(address, &theirTime, &theirID);
+    address = retrieveContact(address, &aTime, &anID);
 
       clear();
       text_size(SMALL);
-      oledprint("%d\n%d\n", theirTime, theirID);
-      //pause(1000);
-
-    sprintf(sendString, "%d,%d", theirTime, theirID);
+      sprintf(sendString, "%d,%d", aTime, anID);
 
     dprint(port, "%32s\n", sendString);
   }
 
-  ee_writeShort(0, USER_COUNT_ADDRESS);
-  ee_writeShort(0, SERVER_COUNT_ADDRESS);
+  ee_writeShort((short)0, USER_COUNT_ADDRESS);
+  ee_writeShort((short)0, SERVER_COUNT_ADDRESS);
 }

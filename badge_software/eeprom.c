@@ -42,10 +42,9 @@ Method to store an interaction into EEPROM.
 @returns address (int) of next open memory slot
 */
 int storeContact(int timeVal, short idVal) {
-
    // Calculate next open memory slot
    unsigned int addr = MEM_START_ADDRESS + (retrieveCount() * 6);
-
+   short newCount;
    // Simple bounds check
    if(addr < (TIME_ADDRESS - 6)) {
       ee_writeInt(timeVal, addr);
@@ -62,11 +61,15 @@ int storeContact(int timeVal, short idVal) {
       }
       else if (idVal < USER_ID_UPPER_LIMIT) {
          // THIS IS A USER BADGE
-         storeUserCount(retrieveUserCount() + 1);
+         newCount = retrieveUserCount();
+         newCount = newCount + 1;
+         storeUserCount(newCount);
       }
       else if (idVal < SERVER_ID_UPPER_LIMIT) {
          // THIS IS A SERVER BADGE
-         storeServerCount(retrieveServerCount() + 1);
+         newCount = retrieveServerCount();
+         newCount = newCount + 1;
+         storeServerCount(newCount);
       }
    }
    // Otherwise, we've got a out of memory problem
@@ -92,6 +95,7 @@ short retrieveUserCount() {
    // If no count is stored, initialize
    if (ee_readShort(USER_COUNT_ADDRESS) == -1) {
      storeUserCount(0);
+     return 0;
    }
    return ee_readShort(USER_COUNT_ADDRESS);
 }
@@ -107,6 +111,7 @@ short retrieveServerCount() {
    // If no count is stored, initialize
    if (ee_readShort(SERVER_COUNT_ADDRESS) == -1) {
       storeServerCount(0);
+      return 0;
    }
    return ee_readShort(SERVER_COUNT_ADDRESS);
 }
@@ -118,6 +123,9 @@ Method to retrieve the total interaction count. Just calls the other two methods
 @returns number (short) of total interactions
 */
 short retrieveCount() {
+   short newCount;
+   newCount = retrieveServerCount();
+   newCount = newCount + retrieveServerCount();
   return retrieveServerCount() + retrieveUserCount();
 }
 
@@ -131,11 +139,11 @@ Method to retrieve a contact from EEPROM.
 
 @returns address (unsigned int) of next contact
 */
-unsigned int retrieveContact(unsigned int addr, int *timeVal, short *idVal) {
+unsigned int retrieveContact(unsigned int addr, int *timeVal, int *idVal) {
   if(addr < (TIME_ADDRESS - 6)) {
     *timeVal = ee_readInt(addr);
     addr += 4;
-    *idVal = ee_readShort(addr);
+    *idVal = (int) ee_readShort(addr);
     addr += 2;
   }
   else {
