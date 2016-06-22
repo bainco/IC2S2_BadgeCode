@@ -164,6 +164,7 @@ void P27_PartToPart() {
    rgbs(RED, RED);
    clear();
    for (int i = 0; i < 2; i++) {
+      oledprint("%d,%d,%d,%d,%d\n", MY_ID, MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
       irprint("%d,%d,%d,%d,%d", MY_ID, MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
       pause(20);
    }
@@ -176,6 +177,7 @@ void P27_PartToPart() {
  rgbs(RED, RED);
    clear();
    for (int i = 0; i < 2; i++) {
+      oledprint("%d,%d,%d,%d,%d\n", MY_ID, MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
       irprint("%d,%d,%d,%d,%d", MY_ID, MY_ANSWERS[0], MY_ANSWERS[1], MY_ANSWERS[2], MY_ANSWERS[3]);
       pause(20);
    }

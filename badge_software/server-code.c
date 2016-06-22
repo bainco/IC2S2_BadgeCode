@@ -14,8 +14,8 @@ the main menu, check-in comms, and saving data to EEPROM.
 #include "ID_Info.h"       // Include ID wInfo
 
 /***** UNIQUE GLOBALS *****/
-int MY_LOCATION_ID = 2001;     // SERVER ID
-char MY_NAME[32] = "KEYNOTE";    // SERVER NAME (7 chars wide)
+int MY_LOCATION_ID = 2002;     // SERVER ID
+char MY_NAME[32] = "Datatho";    // SERVER NAME (7 chars wide)
 /*** END UNIQUE GLOBALS ***/
 
 /***** GLOBAL VARIABLES *****/
