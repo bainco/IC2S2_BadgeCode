@@ -33,6 +33,7 @@ class Attendee(ndb.Model):
     email = ndb.StringProperty(required=True)
     position = ndb.StringProperty(required=True)
     affiliation = ndb.StringProperty(required=True)
+    discipline = ndb.StringProperty(required=False)
     degree = ndb.StringProperty(required=False)
     survey_answer0 = ndb.IntegerProperty(required=True)
     survey_answer1 = ndb.IntegerProperty(required=True)
@@ -56,7 +57,23 @@ class MainHandler(MyHandler):
         self.render('main.html')
 
 class DownloadHandler(MyHandler):
+
+    def fixNames(tempLastName, tempFirstName):
+        while (len(tempFirstName) < len(tempLastName)):
+            tempFirstName = tempFirstName + " "
+
+        while (len(tempLastName) < len(tempFirstName)):
+            tempLastName = tempLastName + " "
+
+        tempFirstName = tempFirstName + "  "
+        tempLastName = tempLastName + "  "
+
+        return (tempFirstName, tempLastName)
+
     def generate_header(self, badgeID, firstName, lastName, survey_answer0, survey_answer1, survey_answer2, survey_answer3):
+
+        if (len(firstName) > 8) or (len(lastName) > 8):
+            (firstName, lastName) = self.fixNames(str(lastName), str(firstName))
 
         current_time_in_utc = datetime.utcnow()
         result = current_time_in_utc + timedelta(hours=-5)
@@ -64,11 +81,11 @@ class DownloadHandler(MyHandler):
         theTime = int ((result - datetime(1970,1,1)).total_seconds())
 
         lineTime = "const int MY_INIT_TIME = " + str(theTime) + ";\n"
-        lineID = "const short MY_ID = " + str(badgeID) + ";\n"
+        lineID = "const int MY_ID = " + str(badgeID) + ";\n"
         lineFName = "const char MY_FIRST_NAME[32] = \"" + firstName +"\";\n"
         lineLName = "const char MY_LAST_NAME[32] = \"" + lastName +"\";\n"
 
-        lineSAnswers = "const short MY_ANSWERS[NUM_QUESTIONS] = {" + str(survey_answer0) + "," + str(survey_answer1) + "," + str(survey_answer2) + "," + str(survey_answer3) + "};\n"
+        lineSAnswers = "const int MY_ANSWERS[NUM_QUESTIONS] = {" + str(survey_answer0) + "," + str(survey_answer1) + "," + str(survey_answer2) + "," + str(survey_answer3) + "};\n"
 
         return (lineTime + lineID + lineFName + lineLName + lineSAnswers)
 
@@ -81,12 +98,14 @@ class DownloadHandler(MyHandler):
         position = self.request.get('position')
         affiliation = self.request.get('affiliation')
         degree = self.request.get('degree')
+        discipline = self.request.get('discipline')
 
         firstName = ''.join(filter(lambda x: x in printable, firstName))
         lastName = ''.join(filter(lambda x: x in printable, lastName))
         position = ''.join(filter(lambda x: x in printable, position))
         affiliation = ''.join(filter(lambda x: x in printable, affiliation))
         degree = ''.join(filter(lambda x: x in printable, degree))
+        discipline = ''.join(filter(lambda x: x in printable, discipline))
 
         survey_answer0 = int(self.request.get('survey_answer0'))
         survey_answer1 = int(self.request.get('survey_answer1'))
@@ -99,7 +118,7 @@ class DownloadHandler(MyHandler):
         else:
             badgeID = 1000
 
-        theAttendee = Attendee(badgeID = badgeID, firstName = firstName, lastName = lastName, email = email, position = position, affiliation = affiliation, degree=degree, survey_answer0 = survey_answer0, survey_answer1 = survey_answer1, survey_answer2 = survey_answer2, survey_answer3 = survey_answer3)
+        theAttendee = Attendee(badgeID = badgeID, firstName = firstName, lastName = lastName, email = email, position = position, discipline=discipline, affiliation = affiliation, degree = degree, survey_answer0 = survey_answer0, survey_answer1 = survey_answer1, survey_answer2 = survey_answer2, survey_answer3 = survey_answer3)
 
         attendeeKey = theAttendee.put()
         url_string = attendeeKey.urlsafe()
@@ -112,8 +131,8 @@ class DownloadHandler(MyHandler):
         attendeeKey = ndb.Key(urlsafe=keyURL)
         theAttendee = attendeeKey.get()
 
-        fileName = str(theAttendee.lastName).replace(" ", "_")
-        fileName = fileName.replace("'", "_")
+        fileName = str(theAttendee.lastName).replace(" ", "_").replace("'", "_")
+        fileName = fileName + str(theAttendee.firstName).replace(" ", "_").replace("'", "_")
 
         self.response.headers['Content-Type'] = 'application/octet-stream'
         self.response.headers["Content-Disposition"] = 'attachment; filename=' + str(fileName) + '.h'
@@ -132,6 +151,7 @@ class AttendeeHandler(MyHandler):
         affiliation = self.request.get('affiliation')
         position = self.request.get('position')
         degree = self.request.get('degree')
+        discipline = self.request.get('discipline')
 
         survey_answer0 = int(self.request.get('survey_answer0'))
         survey_answer1 = int(self.request.get('survey_answer1'))
@@ -144,6 +164,7 @@ class AttendeeHandler(MyHandler):
         self.templateValues['position'] = position
         self.templateValues['affiliation'] = affiliation
         self.templateValues['degree'] = degree
+        self.templateValues['discipline'] = discipline
 
         self.templateValues['survey_answer0'] = survey_answer0
         self.templateValues['survey_answer1'] = survey_answer1
