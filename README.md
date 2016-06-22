@@ -17,3 +17,6 @@
 6. Hit "DONE" button
 7. Unplug badge
 
+# To Harvest Data from App Engine
+0. /usr/local/google_appengine/remote_api_shell.py -s ic2s2-badgeregistration.appspot.com (Note: this requries *.json credential from GAE set in .bash_profile)
+1. import export_as_csv
