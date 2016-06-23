@@ -19,8 +19,8 @@
 7. Unplug badge
 
 # To Harvest Data from App Engine
-0. /usr/local/google_appengine/remote_api_shell.py -s ic2s2-badgeregistration.appspot.com (Note: this requries *.json credential from GAE set in .bash_profile)
-1. import export_as_csv
+0. <code>/usr/local/google_appengine/remote_api_shell.py -s ic2s2-badgeregistration.appspot.com</code> (Note: this requries <code>*.json</code> credential from GAE (downloaded via the online admin interface) and the <code>export GOOGLE_APPLICATION_CREDENTIALS="<path_to_*.json>"</code> set in <code>.bash_profile</code>)
+1. <code>import export_as_csv</code>
 
 # Registration Common Problems
 0. "RAM Verification Failed" - Solved by burning small sample program to badge and then reburning program.
