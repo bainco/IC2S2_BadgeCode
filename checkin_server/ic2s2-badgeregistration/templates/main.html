@@ -15,30 +15,21 @@ $(document).ready(function() {
 
 var projects = [];
 function processData(myTxt) {
-
     myLines = $.csv.toArrays(myTxt)
-    //var myLines = myTxt.split(/\r\n|\n/);
     for (var i=0; i < myLines.length; i++) {
          entries = myLines[i];
-         //entries = myLines[i].split(",")
-         //var lastEntry = "";
-         //for (var j = 2; j < entries.length; j++) {
-         //   lastEntry += entries[j];
-         //}
-         //lastEntry = lastEntry.replace(/"/g, "");
           projects.push({value: entries[0], firstName:entries[0], lastName: entries[1], email:entries[2], position: entries[3], affiliation: entries[4]});
     }
-
        $( "#firstName" ).autocomplete({
-         minLength: 0,
+         minLength: 1,
          source: projects,
          focus: function( event, ui ) {
+          console.log("HELLO");
           $( "#firstName" ).val( ui.item.firstName );
           return false;
          },
          select: function( event, ui ) {
           $( "#firstName" ).val( ui.item.firstName );
-          //$( "#project-id" ).val( ui.item.value );
           $( "#lastName" ).val( ui.item.lastName );
           $( "#email" ).val(ui.item.email);
           $( "#position" ).val(ui.item.position);
@@ -52,32 +43,88 @@ function processData(myTxt) {
           .appendTo( ul );
        };
 }
-
  </script>
-
 
 <!--<div class="displaybox">-->
 <div class="displaybox">
    <h1>Badge Registration Form</h1>
    <br>
     <form class="form-container" method="post" action="/Attendee/">
-    <div class="form-title">First Name</div>
-    <input class="form-field" type="text" id="firstName" name="firstName" /><br/>
-    <div class="form-title">Last Name</div>
-    <input class="form-field" type="text" id="lastName" name="lastName"/><br/>
-    <div class="form-title">Discipline of Company/Department</div>
-    <input class="form-field" type="text" id="discipline" name="discipline"/><br/>
-    <div class="form-title">Discipline of Most Recent Degree</div>
-    <input class="form-field" type="text" id="degree" name="degree"/><br/>
-    <input style="display: none;" id="email" name="email"/>
-    <input style="display: none;" id="position" name="position"/>
-    <input style="display: none;" id="affiliation" name="affiliation"/>
-    <div class="form-title">Which type of fame would you most prefer?</div>
+
+      <div class="form-title">First name</div>
+      <input class="form-field" type="text" id="firstName" name="firstName"/><br/>
+
+      <div class="form-title">Last name</div>
+      <input class="form-field" type="text" id="lastName"  name="lastName"/><br/>
+
+      <div class="form-title">Name of current employer</div>
+      <input class="form-field" type="text" id="affiliation"  name="affiliation"/>
+
+      <div class="form-title">Discipline of most recent degree</div>
+      <input class="form-field" type="text" name="degree"/><br/>
+
+      <div class="form-title">Field or discipline you're currently working in</div>
+      <input class="form-field" type="text" name="discipline"/><br/>
+
+      <div class="form-title">Current position</div>
+      <input class="form-field" type="text" id="position" name="position"/>
+
+      <input type="hidden" id="email" name="email"/>
+
+    <!-- SONIC Q0 -->
+    <div class="form-title">Which best describes you:</div>
+    <input type="radio" name="sonicq_0" value="0" checked /> More of a Computational Scientist than a Social Scientist<br>
+    <input type="radio" name="sonicq_0" value="1" /> More of a Social Scientist than a Computational Scientist<br>
+    <input type="radio" name="sonicq_0" value="2" /> A pure Computational Social Scientist<br>
+    <br>
+
+    <!-- SONIC Q1 -->
+    <div class="form-title">Are your closest collaborators/colleageus:</div>
+    <input type="radio" name="sonicq_1" value="0" checked /> More Computational Scientists than Social Scientists<br>
+    <input type="radio" name="sonicq_1" value="1" /> More Social Scientists than Computational Scientists<br>
+    <input type="radio" name="sonicq_1" value="2" /> An even mix of Social and Computational Scientists<br>
+    <br>
+
+    <!-- SONIC Q2 -->
+    <div class="form-title">Is this your first time attending a "Computational Social Science" event?</div>
+    <input type="radio" name="sonicq_2" value="0" checked /> Yes<br>
+    <input type="radio" name="sonicq_2" value="1" /> No<br>
+    <br>
+
+    <!-- SONIC Q3 -->
+    <div class="form-title">When it comes to <i>computational</i> data, tools, and methods, I am:</div>
+    <input type="radio" name="sonicq_3" value="0" checked /> A novice<br>
+    <input type="radio" name="sonicq_3" value="1" /> A beginner<br>
+    <input type="radio" name="sonicq_3" value="2" /> Competent<br>
+    <input type="radio" name="sonicq_3" value="3" /> Proficient<br>
+    <input type="radio" name="sonicq_3" value="4" /> An expert<br>
+    <br>
+
+    <!-- SONIC Q4 -->
+    <div class="form-title">When it comes to <i>social science</i> theories and methods, I am:</div>
+    <input type="radio" name="sonicq_4" value="0" checked /> A novice<br>
+    <input type="radio" name="sonicq_4" value="1" /> A beginner<br>
+    <input type="radio" name="sonicq_4" value="2" /> Competent<br>
+    <input type="radio" name="sonicq_4" value="3" /> Proficient<br>
+    <input type="radio" name="sonicq_4" value="4" /> An expert<br>
+    <br>
+
+    <!-- SONIC Q5 -->
+    <div class="form-title">When it comes to "<i>computational social science</i>", I am:</div>
+    <input type="radio" name="sonicq_5" value="0" checked /> A novice<br>
+    <input type="radio" name="sonicq_5" value="1" /> A beginner<br>
+    <input type="radio" name="sonicq_5" value="2" /> Competent<br>
+    <input type="radio" name="sonicq_5" value="3" /> Proficient<br>
+    <input type="radio" name="sonicq_5" value="4" /> An expert<br>
+    <br>
+
+     <div class="form-title">Which type of fame would you most prefer?</div>
      <input type="radio" name="survey_answer0" value="0" checked> Having 1,000,000 followers on YouTube<br>
      <input type="radio" name="survey_answer0" value="1"> Having a TED talk<br>
      <input type="radio" name="survey_answer0" value="2"> Being on the cover of the New York Times<br>
      <input type="radio" name="survey_answer0" value="3"> Being a guest on the Late Show<br>
      <br>
+
      <div class="form-title">Which technology are you looking forward to the most?</div>
      <input type="radio" name="survey_answer1" value="0" checked> Self-driving cars<br>
      <input type="radio" name="survey_answer1" value="1"> A robot butler<br>
@@ -85,6 +132,7 @@ function processData(myTxt) {
      <input type="radio" name="survey_answer1" value="3"> Brain computer interface<br>
      <input type="radio" name="survey_answer1" value="4"> Virtual Reality<br>
      <br>
+
      <div class="form-title">Which TV show world would you want to live in for a year?</div>
      <input type="radio" name="survey_answer2" value="0" checked> Mad Men<br>
      <input type="radio" name="survey_answer2" value="1"> Game of Thrones<br>
@@ -92,6 +140,7 @@ function processData(myTxt) {
      <input type="radio" name="survey_answer2" value="3"> Breaking Bad<br>
      <input type="radio" name="survey_answer2" value="3"> Star Trek<br>
      <br>
+
      <div class="form-title">Which of these musical genres do you prefer?</div>
      <input type="radio" name="survey_answer3" value="0" checked> Pop Music<br>
      <input type="radio" name="survey_answer3" value="1"> Classical Music<br>
@@ -99,6 +148,7 @@ function processData(myTxt) {
      <input type="radio" name="survey_answer3" value="3"> Rock<br>
      <input type="radio" name="survey_answer3" value="3"> Musicals<br>
      <br>
+
      <div class="submit-container">
      <input class="submit-button" type="submit" value="SUBMIT" />
      </div>

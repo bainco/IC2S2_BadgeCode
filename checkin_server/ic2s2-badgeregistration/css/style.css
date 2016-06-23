@@ -126,7 +126,7 @@ margin-right: auto;
 }
 
 .addbox{
-	width: 190px;
+	width: 500px;
 	display: inline-block;
 	border: 2px solid gray;
 	margin: 2px;
@@ -216,7 +216,7 @@ left:0;
    box-shadow: rgba(255,255,255,0.4) 0 1px 0, inset rgba(000,000,000,0.7) 0 0px 0px;
    padding:8px;
    margin-bottom:20px;
-   width:280px;
+   width:375px;
    }
 .form-field:focus {
    background: #fff;

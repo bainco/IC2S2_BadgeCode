@@ -7,37 +7,53 @@
 <script>
 
 function showNextButton() {
-
    document.getElementById("nextButtonContainer").setAttribute("style", "display:block;");
     setTimeout(function(){
       document.getElementById("waitText").setAttribute("style", "display: none;");
       document.getElementById("nextButton").setAttribute("style", "display: block;");
-   }, 13000);
+   }, 20000);
 }
 </script>
 <div class="displaybox">
     <h1>Confirm Your Information</h1>
     <br>
     <form class="form-container" method="post" action="/Download/">
-    <div class="form-title">First Name</div>
+
+    <div class="form-title">First name</div>
     <input class="form-field" type="text" name="firstName" value="{{ firstName }}" /><br/>
-    <div class="form-title">Last Name</div>
+
+    <div class="form-title">Last name</div>
     <input class="form-field" type="text" name="lastName" value="{{ lastName }}" /><br/>
-    <div class="form-title">Discipline of Company/Department</div>
-    <input class="form-field" type="text" name="discipline" value="{{ discipline }}"/><br/>
-    <div class="form-title">Discipline of Most Recent Degree</div>
+
+    <div class="form-title">Name of current employer</div>
+    <input class="form-field" name="affiliation" value="{{ affiliation }}"/>
+
+    <div class="form-title">Discipline of most recent degree</div>
     <input class="form-field" type="text" name="degree" value="{{ degree }}"/><br/>
-    <input style="display: none;" name="email" value="{{ email }}"/>
-    <input style="display: none;" name="position" value="{{ position }}"/>
-    <input style="display: none;" name="affiliation" value="{{ affiliation }}"/>
-    <!-- <label for="badgeID">BadgeID: {{ badgeID }}</label><input type="hidden" label="badgeID" value={{ badgeID }} readonly /></br> -->
-    <div class="submit-container">
-    <input class="submit-button" type="submit" value="CONFIRM AND BURN TO BADGE" onclick="showNextButton()" />
-    </div>
+
+    <div class="form-title">Field or discipline you're currently working in</div>
+    <input class="form-field" type="text" name="discipline" value="{{ discipline }}"/><br/>
+
+    <div class="form-title">Current position</div>
+    <input class="form-field" name="position" value="{{ position }}"/>
+
+    <input type="hidden" name="email" value="{{ email }}"/>
+
+    <input type="hidden" name="sonicq_0" value={{ sonicq_0 }} />
+    <input type="hidden" name="sonicq_1" value={{ sonicq_1 }} />
+    <input type="hidden" name="sonicq_2" value={{ sonicq_2 }} />
+    <input type="hidden" name="sonicq_3" value={{ sonicq_3 }} />
+    <input type="hidden" name="sonicq_4" value={{ sonicq_4 }} />
+    <input type="hidden" name="sonicq_5" value={{ sonicq_5 }} />
+
     <input type="hidden" name="survey_answer0" value={{ survey_answer0 }} />
     <input type="hidden" name="survey_answer1" value={{ survey_answer1 }} />
     <input type="hidden" name="survey_answer2" value={{ survey_answer2 }} />
     <input type="hidden" name="survey_answer3" value={{ survey_answer3 }} />
+
+    <div class="submit-container">
+    <input class="submit-button" type="submit" value="CONFIRM AND BURN TO BADGE" onclick="showNextButton()" />
+    </div>
     </form>
 
     <br>

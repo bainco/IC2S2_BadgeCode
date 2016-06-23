@@ -39,6 +39,12 @@ class Attendee(ndb.Model):
     survey_answer1 = ndb.IntegerProperty(required=True)
     survey_answer2 = ndb.IntegerProperty(required=True)
     survey_answer3 = ndb.IntegerProperty(required=True)
+    sonicq_0 = ndb.IntegerProperty(required=True)
+    sonicq_1 = ndb.IntegerProperty(required=True)
+    sonicq_2 = ndb.IntegerProperty(required=True)
+    sonicq_3 = ndb.IntegerProperty(required=True)
+    sonicq_4 = ndb.IntegerProperty(required=True)
+    sonicq_5 = ndb.IntegerProperty(required=True)
 
 class MyHandler(webapp2.RequestHandler):
     "Setup self.user and self.templateValues values."
@@ -99,6 +105,13 @@ class DownloadHandler(MyHandler):
         degree = self.request.get('degree')
         discipline = self.request.get('discipline')
 
+        sonicq_0 = int(self.request.get('sonicq_0'))
+        sonicq_1 = int(self.request.get('sonicq_1'))
+        sonicq_2 = int(self.request.get('sonicq_2'))
+        sonicq_3 = int(self.request.get('sonicq_3'))
+        sonicq_4 = int(self.request.get('sonicq_4'))
+        sonicq_5 = int(self.request.get('sonicq_5'))
+
         firstName = ''.join(filter(lambda x: x in printable, firstName))
         lastName = ''.join(filter(lambda x: x in printable, lastName))
         position = ''.join(filter(lambda x: x in printable, position))
@@ -117,7 +130,7 @@ class DownloadHandler(MyHandler):
         else:
             badgeID = 1000
 
-        theAttendee = Attendee(badgeID = badgeID, firstName = firstName, lastName = lastName, email = email, position = position, discipline=discipline, affiliation = affiliation, degree = degree, survey_answer0 = survey_answer0, survey_answer1 = survey_answer1, survey_answer2 = survey_answer2, survey_answer3 = survey_answer3)
+        theAttendee = Attendee(badgeID = badgeID, firstName = firstName, lastName = lastName, email = email, position = position, discipline = discipline, affiliation = affiliation, degree = degree, sonicq_0 = sonicq_0, sonicq_1 = sonicq_1, sonicq_2 = sonicq_2, sonicq_3 = sonicq_3, sonicq_4 = sonicq_4, sonicq_5 = sonicq_5, survey_answer0 = survey_answer0, survey_answer1 = survey_answer1, survey_answer2 = survey_answer2, survey_answer3 = survey_answer3)
 
         attendeeKey = theAttendee.put()
         url_string = attendeeKey.urlsafe()
@@ -152,6 +165,13 @@ class AttendeeHandler(MyHandler):
         degree = self.request.get('degree')
         discipline = self.request.get('discipline')
 
+        sonicq_0 = int(self.request.get('sonicq_0'))
+        sonicq_1 = int(self.request.get('sonicq_1'))
+        sonicq_2 = int(self.request.get('sonicq_2'))
+        sonicq_3 = int(self.request.get('sonicq_3'))
+        sonicq_4 = int(self.request.get('sonicq_4'))
+        sonicq_5 = int(self.request.get('sonicq_5'))
+
         survey_answer0 = int(self.request.get('survey_answer0'))
         survey_answer1 = int(self.request.get('survey_answer1'))
         survey_answer2 = int(self.request.get('survey_answer2'))
@@ -165,10 +185,18 @@ class AttendeeHandler(MyHandler):
         self.templateValues['degree'] = degree
         self.templateValues['discipline'] = discipline
 
+        self.templateValues['sonicq_0'] = sonicq_0
+        self.templateValues['sonicq_1'] = sonicq_1
+        self.templateValues['sonicq_2'] = sonicq_2
+        self.templateValues['sonicq_3'] = sonicq_3
+        self.templateValues['sonicq_4'] = sonicq_4
+        self.templateValues['sonicq_5'] = sonicq_5
+
         self.templateValues['survey_answer0'] = survey_answer0
         self.templateValues['survey_answer1'] = survey_answer1
         self.templateValues['survey_answer2'] = survey_answer2
         self.templateValues['survey_answer3'] = survey_answer3
+
         self.render('confirm.html')
 
 app = webapp2.WSGIApplication([
