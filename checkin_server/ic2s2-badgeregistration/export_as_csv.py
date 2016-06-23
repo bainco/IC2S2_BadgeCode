@@ -4,6 +4,7 @@
 
 import csv
 from main import Attendee
+from datetime import datetime, timedelta
 
 def exportToCsv(query, csvFileName, delimiter):
 	with open(csvFileName, 'wb') as csvFile:
@@ -22,10 +23,15 @@ def exportToCsv(query, csvFileName, delimiter):
 		print 'Finished saving all rows.'
 
 def writeHeader(csvWriter):
-	csvWriter.writerow(['date', 'badgeID', 'firstName', 'lastName', 'email', 'affiliation', 'position', 'discipline', 'degree', 'survey_answer0', 'survey_answer1', 'survey_answer2', 'survey_answer3']) #Output csv header
+	csvWriter.writerow(['date', 'badgeID', 'firstName', 'lastName', 'email', 'affiliation', 'position', 'discipline', 'degree','sonicq_0', 'sonicq_1', 'sonicq_2', 'sonicq_3', 'sonicq_4', 'sonicq_5', 'survey_answer0', 'survey_answer1', 'survey_answer2', 'survey_answer3']) #Output csv header
 
 def saveItem(csvWriter, item):
-	csvWriter.writerow([item.date, item.badgeID, item.firstName, item.lastName, item.email, item.affiliation, item.position, item.discipline, item.degree, item.survey_answer0, item.survey_answer1, item.survey_answer2, item.survey_answer3]) # Save items in preferred format
+	csvWriter.writerow([item.date, item.badgeID, item.firstName, item.lastName, item.email, item.affiliation, item.position, item.discipline, item.degree, item.sonicq_0, item.sonicq_1, item.sonicq_2, item.sonicq_3, item.sonicq_4, item.sonicq_5, item.survey_answer0, item.survey_answer1, item.survey_answer2, item.survey_answer3]) # Save items in preferred format
 
 query = Attendee.gql("ORDER BY date", produce_cursors=True) #Query for items
-exportToCsv(query, 'myExport.csv', ',')
+
+current_time_in_utc = datetime.utcnow()
+result = current_time_in_utc + timedelta(hours=-5)
+theTime = int ((result - datetime(1970,1,1)).total_seconds())
+
+exportToCsv(query, 'Attendee-' + str(theTime) + 'dump.csv', ',')
