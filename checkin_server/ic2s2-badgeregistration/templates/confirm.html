@@ -20,13 +20,13 @@ function showNextButton() {
     <form class="form-container" method="post" action="/Download/">
 
     <div class="form-title">First name</div>
-    <input class="form-field" type="text" name="firstName" value="{{ firstName }}" /><br/>
+    <input class="form-field" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="firstName" value="{{ firstName }}" /><br/>
 
     <div class="form-title">Last name</div>
-    <input class="form-field" type="text" name="lastName" value="{{ lastName }}" /><br/>
+    <input class="form-field" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="lastName" value="{{ lastName }}" /><br/>
 
     <div class="form-title">Name of current employer</div>
-    <input class="form-field" name="affiliation" value="{{ affiliation }}"/>
+    <input class="form-field" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="affiliation" value="{{ affiliation }}"/>
 
     <div class="form-title">Discipline of most recent degree</div>
     <input class="form-field" type="text" name="degree" value="{{ degree }}"/><br/>
