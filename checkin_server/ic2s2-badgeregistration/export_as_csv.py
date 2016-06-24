@@ -34,4 +34,4 @@ current_time_in_utc = datetime.utcnow()
 result = current_time_in_utc + timedelta(hours=-5)
 theTime = int ((result - datetime(1970,1,1)).total_seconds())
 
-exportToCsv(query, 'Attendee-' + str(theTime) + 'dump.csv', ',')
+exportToCsv(query, 'Attendee-' + str(theTime) + '-dump.csv', ',')
