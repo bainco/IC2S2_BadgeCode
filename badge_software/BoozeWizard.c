@@ -151,13 +151,13 @@ void upload_contacts(fdserial* port)
   short c_count = retrieveCount();
   unsigned int address = MEM_START_ADDRESS;
 
-  sprintf(sendString, "%d,%d\n", (int) c_count, (int) theirID);
+  sprintf(sendString, "%d,%d,%s\n", (int) c_count, (int) theirID, theirName);
 
   clear();
-  oledprint("%32s\n", sendString);
+  oledprint("%s\n", sendString);
   pause(1000);
   dprint(port, "txBegin\n");
-  dprint(port, "%32s\n", sendString);
+  dprint(port, "%s\n", sendString);
 
   for (short i = 0; i < c_count; i++)
   {
