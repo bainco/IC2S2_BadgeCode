@@ -128,12 +128,11 @@ try:
 
         # Dump to file
         #f = open('data-' + str(theirID) + '.txt', 'w')
-        f = open('data.csv', 'a')
+        f = open('bw_data.csv', 'a')
         f.write('MY_ID\n' + str(theirID) + '\n')
         f.write('MY_DATA\n')
         for i in xrange(0, num_records):
             f.write(str(badge_times[i]) + ',' + str(badge_ids[i]) + '\n')
-        f.write('\n')
         f.close()
 
 except Exception, err:
