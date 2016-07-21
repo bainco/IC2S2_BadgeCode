@@ -146,12 +146,13 @@ class DownloadHandler(MyHandler):
         fileName = str(theAttendee.lastName).replace(" ", "_").replace("'", "_")
         fileName = fileName + str(theAttendee.firstName).replace(" ", "_").replace("'", "_")
 
-        self.response.headers['Content-Type'] = 'application/octet-stream'
-        self.response.headers["Content-Disposition"] = 'attachment; filename=' + str(fileName) + '.h'
-        self.response.headers['Cache-Control'] = 'no-cache'
+        #self.response.headers['Content-Type'] = 'application/octet-stream'
+        #self.response.headers["Content-Disposition"] = 'attachment; filename=' + str(fileName) + '.h'
+        #self.response.headers['Cache-Control'] = 'no-cache'
 
-        header_string = self.generate_header(theAttendee.badgeID, theAttendee.firstName, theAttendee.lastName, theAttendee.survey_answer0, theAttendee.survey_answer1, theAttendee.survey_answer2, theAttendee.survey_answer3)
-        self.response.out.write(header_string)
+        #header_string = self.generate_header(theAttendee.badgeID, theAttendee.firstName, theAttendee.lastName, theAttendee.survey_answer0, theAttendee.survey_answer1, theAttendee.survey_answer2, theAttendee.survey_answer3)
+        #self.response.out.write(header_string)
+        self.redirect("/")
         return
 
 class AttendeeHandler(MyHandler):

@@ -1,4 +1,4 @@
-;; Author: David Weintrop and Connor Bain
+;; Authors: Connor Bain and David Weintrop
 
 ;; Adapted from Corey Brady's Disease Partsim
 
@@ -7,6 +7,14 @@ globals [answers-list questions-list selected-question first-sick   all-interact
 
 breed [ participants participant ]
 breed [ ghosts ghost]
+
+
+breed [ server-data-turtles server-data-turtle ]
+server-data-turtles-own [
+ badgeID
+ name
+ theDay
+]
 
 breed [survey-data-turtles survey-data-turtle]
 survey-data-turtles-own [
@@ -33,6 +41,7 @@ ghosts-own [ id ]
 links-own [ my-times ]
 
 to setup
+  reset-ticks
   set questions-list [
     "Which best describes you:"
     "Are your closest collaborators/colleagues:"
@@ -90,11 +99,13 @@ to setup
   ["" "" "" "" "" ""]
   ]
 
+  ask patches [ set pcolor white ]
+
   set choose-a-question "default"
   set selected-question 10
-  ask turtles with [not is-survey-data-turtle? self] [die]
-  set-default-shape participants "participant"
-  set-default-shape ghosts "ghost"
+  ask turtles with [(not is-survey-data-turtle? self) and (not is-server-data-turtle? self)] [die]
+  set-default-shape participants "cylinder"
+  set-default-shape ghosts "cylinder"
 
   set first-sick nobody
 
@@ -111,9 +122,49 @@ to setup
   reset-ticks
 end
 
+to go
+
+  tick
+end
+
+to toggle-servers
+
+  ifelse not show-servers? [
+  ask ghosts with [id > 1999] [
+    ask my-links [
+     hide-link
+    ]
+    ht
+  ]
+
+  ][
+  ask ghosts with [id > 1999] [
+    ask my-links[
+      show-link
+    ]
+      st
+  ]
+  ]
+
+end
+
+to load-server-file
+  file-open "/Users/connorbain/nudropbox/School/CCL/ic2s2-badgecode/badge_data_collection/server_names.csv"
+  while [not file-at-end?] [
+   let row csv:from-row file-read-line
+   create-server-data-turtles 1 [
+     set badgeID item 0 row
+     set name item 1 row
+     set theDay item 2 row
+     ht
+   ]
+  ]
+  file-close
+end
+
 to load-database-file
   ;  let f "sample_data.csv"
-  file-open "/Users/connorbain/nudropbox/School/CCL/ic2s2-badgecode/output_data/booze_wizard_data/database_dump.csv"
+  file-open "/Users/connorbain/nudropbox/School/CCL/ic2s2-badgecode/badge_data_collection/database_dump.csv"
   let headerLine csv:from-row file-read-line
   while [not file-at-end?] [
    let row csv:from-row file-read-line
@@ -153,7 +204,7 @@ end
 
 to load-data-file
 ;  let f "sample_data.csv"
-   file-open "/Users/connorbain/nudropbox/School/CCL/ic2s2-badgecode/output_data/booze_wizard_data/bw_data.csv"
+   file-open "/Users/connorbain/nudropbox/School/CCL/ic2s2-badgecode/badge_data_collection/bw_data.csv"
      let row csv:from-row file-read-line ;; priming read
      while [ not file-at-end? ]
      [
@@ -171,7 +222,7 @@ to load-data-file
 
            set row csv:from-row file-read-line
            while [item 0 row != "MY_ID" and not file-at-end?] [
-
+            ; show row
              let line_time item 0 row
              let line_id item 1 row
              set my_interactions_time lput line_time my_interactions_time
@@ -245,12 +296,13 @@ end
 
 to make-a-participant-with-id [ in_id in_interaction_ids in_interaction_times]
   create-participants 1 [
+    set color blue
     show "Participant loaded."
     set id in_id
     let candidate-patches  patches with [ abs pxcor < max-pxcor - 2  and abs pycor < max-pycor - 2 ]
     if any? candidate-patches with [not any? participants in-radius 4.2] [ set candidate-patches candidate-patches with [not any? participants in-radius 4.2] ]
     move-to one-of candidate-patches
-    set size 3
+    set size 1.5
     let padding max (list 0 (.5 + (8 - 4) / 2) )
     let pad ""
     repeat padding [ set pad (word pad " ") ]
@@ -271,12 +323,18 @@ to make-a-ghost-with-id [in_id in_task]
     let padding max (list 0 (.5 + (8 - 4) / 2) )
     let pad ""
     repeat padding [ set pad (word pad " ") ]
-    set label (word id pad)
-    set color grey
-    run in_task
-    if id > 1999 [
-     set shape "box"
+
+   ifelse id > 1999 [
+     set shape "square"
+     show in_id
+     set color lime
+     ;set label (word [name] of one-of server-data-turtles with [badgeID = in_id] ", " [substring theDay 0 2] of one-of server-data-turtles with [badgeID = in_id])
     ]
+    [set label (word id pad)
+          set color grey]
+
+    run in_task
+
   ]
 end
 
@@ -349,8 +407,8 @@ to recolor
      set color magenta
    ]
    if response = -1 [
-     set color one-of base-colors
-   ]
+     set color blue
+  ]
   ]
 end
 
@@ -378,8 +436,8 @@ to redo-network
   [
     ;;non-disease interactions
     let inter ?
-    let turtlea one-of turtles with [(not is-survey-data-turtle? self) and id = item 0 ? ]
-    let turtleb one-of turtles with [(not is-survey-data-turtle? self) and id = item 1 ? ]
+    let turtlea one-of turtles with [((not is-survey-data-turtle? self) and (not is-server-data-turtle? self)) and id = item 0 ? ]
+    let turtleb one-of turtles with [((not is-survey-data-turtle? self) and (not is-server-data-turtle? self)) and id = item 1 ? ]
 
     let thetime item 2 ?
     ifelse ( turtlea = nobody or turtleb = nobody ) [
@@ -486,7 +544,7 @@ NIL
 MONITOR
 215
 580
-317
+318
 637
 Interactions
 sum [ length my-times ] of connections
@@ -579,7 +637,7 @@ BUTTON
 321
 453
 Redo Layout
-every .01 [layout-spring turtles links .4 world-height / 3 .3\nask turtles[\nrt random 30 - 15\nfd .15\n]]\n
+every .01 [layout-spring turtles links .1 world-height / 5 .99\nask turtles[\nrt random 30 - 15\nfd .15\n]\n;ask ghosts [ifelse (id > 1999) [set ycor min-pycor + 5] [set ycor max-pycor - 3]]\n;ask participants [set ycor max-pycor - 9]\n]\n
 T
 1
 T
@@ -722,6 +780,97 @@ count ghosts
 1
 14
 
+BUTTON
+640
+780
+767
+825
+NIL
+load-server-file
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+640
+830
+770
+875
+NIL
+count server-data-turtles
+17
+1
+11
+
+BUTTON
+975
+665
+1097
+698
+NIL
+toggle-servers
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SWITCH
+825
+665
+972
+698
+show-servers?
+show-servers?
+1
+1
+-1000
+
+PLOT
+15
+640
+315
+775
+plot 1
+NIL
+NIL
+1000.0
+1500.0
+0.0
+60.0
+false
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "ask participants [plotxy id count my-links]"
+
+BUTTON
+355
+650
+418
+683
+NIL
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -832,6 +981,7 @@ cylinder
 false
 0
 Circle -7500403 true true 0 0 300
+Circle -16777216 false false 0 0 300
 
 dot
 false
@@ -983,6 +1133,7 @@ square
 false
 0
 Rectangle -7500403 true true 30 30 270 270
+Rectangle -16777216 false false 30 30 270 270
 
 square 2
 false

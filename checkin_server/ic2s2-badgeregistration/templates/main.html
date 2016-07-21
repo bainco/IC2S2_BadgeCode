@@ -47,7 +47,7 @@ function processData(myTxt) {
 
 <!--<div class="displaybox">-->
 <div class="displaybox">
-   <h1>Badge Registration Form</h1>
+   <h1>Updated Survey</h1>
    <br>
     <form class="form-container" method="post" action="/Attendee/">
 
@@ -57,6 +57,7 @@ function processData(myTxt) {
       <div class="form-title">Last name</div>
       <input class="form-field" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="lastName"  name="lastName"/><br/>
 
+      <div style="display:none;">
       <div class="form-title">Name of current employer</div>
       <input class="form-field" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="affiliation"  name="affiliation"/>
 
@@ -70,7 +71,7 @@ function processData(myTxt) {
       <input class="form-field" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="position" name="position"/>
 
       <input type="hidden" id="email" name="email"/>
-
+</div>
     <!-- SONIC Q0 -->
     <div class="form-title">Which best describes you:</div>
     <input type="radio" name="sonicq_0" value="0" checked /> More of a Computational Scientist than a Social Scientist<br>
@@ -118,6 +119,7 @@ function processData(myTxt) {
     <input type="radio" name="sonicq_5" value="4" /> An expert<br>
     <br>
 
+    <div style="display:none;">
      <div class="form-title">Which type of fame would you most prefer?</div>
      <input type="radio" name="survey_answer0" value="0" checked> Having 1,000,000 followers on YouTube<br>
      <input type="radio" name="survey_answer0" value="1"> Having a TED talk<br>
@@ -148,6 +150,7 @@ function processData(myTxt) {
      <input type="radio" name="survey_answer3" value="3"> Rock<br>
      <input type="radio" name="survey_answer3" value="4"> Musicals<br>
      <br>
+  </div>
 
      <div class="submit-container">
      <input class="submit-button" type="submit" value="SUBMIT" />

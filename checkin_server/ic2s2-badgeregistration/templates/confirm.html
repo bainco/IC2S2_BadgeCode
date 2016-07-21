@@ -11,7 +11,7 @@ function showNextButton() {
     setTimeout(function(){
       document.getElementById("waitText").setAttribute("style", "display: none;");
       document.getElementById("nextButton").setAttribute("style", "display: block;");
-   }, 20000);
+   }, 500);
 }
 </script>
 <div class="displaybox">
@@ -25,6 +25,7 @@ function showNextButton() {
     <div class="form-title">Last name</div>
     <input class="form-field" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="lastName" value="{{ lastName }}" /><br/>
 
+    <div style="display:none;">
     <div class="form-title">Name of current employer</div>
     <input class="form-field" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="affiliation" value="{{ affiliation }}"/>
 
@@ -36,6 +37,7 @@ function showNextButton() {
 
     <div class="form-title">Current position</div>
     <input class="form-field" name="position" value="{{ position }}"/>
+</div>
 
     <input type="hidden" name="email" value="{{ email }}"/>
 
@@ -52,7 +54,7 @@ function showNextButton() {
     <input type="hidden" name="survey_answer3" value={{ survey_answer3 }} />
 
     <div class="submit-container">
-    <input class="submit-button" type="submit" value="CONFIRM AND BURN TO BADGE" onclick="showNextButton()" />
+    <input class="submit-button" type="submit" value="CONFIRM AND SUBMIT" onclick="showNextButton()" />
     </div>
     </form>
 
