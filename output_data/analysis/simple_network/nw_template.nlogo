@@ -119,8 +119,8 @@ BUTTON
 15
 10
 320
-55
-Refresh Model
+51
+setup
 setup
 NIL
 1
@@ -195,9 +195,9 @@ count links
 
 BUTTON
 15
-465
+520
 115
-498
+553
 remove servers
 ask server-badges [ die ]
 NIL
@@ -212,9 +212,9 @@ NIL
 
 PLOT
 15
-310
+365
 320
-460
+515
 Link Frequency
 Link Strength
 Number of Links
@@ -230,9 +230,9 @@ PENS
 
 BUTTON
 125
-465
+520
 267
-498
+553
 Update Histogram
 go
 NIL
@@ -247,9 +247,9 @@ NIL
 
 MONITOR
 15
-205
+260
 320
-250
+305
 NIL
 global-clustering-coefficient
 17
@@ -258,11 +258,22 @@ global-clustering-coefficient
 
 MONITOR
 15
-255
+310
 217
-300
+355
 NIL
 average-clustering-coefficient
+17
+1
+11
+
+MONITOR
+207
+210
+324
+255
+num interactions
+sum [frequency] of links
 17
 1
 11
