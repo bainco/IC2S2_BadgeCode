@@ -3,7 +3,7 @@
 
 import csv, sys, os
 
-for fFileObj in os.walk("pdata-split/"):
+for fFileObj in os.walk('../pdata-split/'):
    theFilesList = fFileObj[2]
    break
 
@@ -14,7 +14,7 @@ theID = -1
 theList = []
 
 for aFile in theFilesList:
-    with open('pdata-split/' + aFile, 'rb') as csvfile:
+    with open('../pdata-split/' + aFile, 'rb') as csvfile:
         singleFile = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in singleFile:
             if row == []:
