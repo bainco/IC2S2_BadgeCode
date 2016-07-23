@@ -13,7 +13,6 @@ list_of_server_names = []
 for aFile in theFilesList:
    with open('../sdata-split/' + aFile, 'rb') as csvfile:
        singleFile = csv.reader(csvfile, delimiter=',', quotechar='"')
-
        parsedFileName = aFile.split('.')[0].split('-')
        loadID = int(parsedFileName[1])
        list_of_server_names.append((loadID, parsedFileName[2], parsedFileName[3].replace('_', " ")))
