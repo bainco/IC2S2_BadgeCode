@@ -9,18 +9,15 @@ the main menu, check-in comms, and saving data to EEPROM.
 #include "simpletools.h"   // Include simpletools library
 #include "badgetools.h"    // Include badgetools library
 #include "eeprom.h"        // Include EEPROM library
-#include "sound.h"         // Include sound library
 #include "datetime.h"      // Include datetime library
 #include "ID_Info.h"       // Include ID wInfo
 
 /***** UNIQUE GLOBALS *****/
-int MY_LOCATION_ID = 2002;     // SERVER ID
-char MY_NAME[32] = "Datatho";    // SERVER NAME (7 chars wide)
+int MY_LOCATION_ID = 2044;     // SERVER ID
+char MY_NAME[32] = "J 101";    // SERVER NAME (7 chars wide)
 /*** END UNIQUE GLOBALS ***/
 
 /***** GLOBAL VARIABLES *****/
-sound *audio;  // Pointer for audio process
-
 // Time Variables
 datetime dt = {2016, 6, 20, 22, 27, 00}; // Date time object
 int et;                                // Epoch time
@@ -49,11 +46,16 @@ void main() {
    badge_setup();       // setup
    dt_run(dt);          // Use to start system timer
 
-   audio = sound_run(9, 10);      // Run sound, get audio pointer
-   sound_volume(audio, 0, 100);   // Set channel volumes
-
    Display_Main_Menu();
    irclear();
+   
+   pause(10000);
+  P25_Upload_To_Computer();
+    P25_Upload_To_Computer();
+
+  P25_Upload_To_Computer();
+
+
    while (1) {
       states = buttons();
       switch(states) {                         // Handle button press
@@ -93,7 +95,7 @@ void All_OSH_Erase_EEPROM() {
    clear();
    text_size(LARGE);
    oledprint("CONFIRM");
-   pause(500);
+   pause(1000);
 
    states = buttons();
 

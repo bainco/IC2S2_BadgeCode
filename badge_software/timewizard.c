@@ -7,7 +7,7 @@
 /*** GLOBALS ***/
 short TIME_WIZARD_ID = 9999;
 
-datetime dt = {2016, 6, 22, 0, 14, 00};                        // Convert from epoch to datetime
+datetime dt = {2016, 6, 26, 7, 58, 00};                        // Convert from epoch to datetime
                            // Date/teme values
 int MY_TIME;                                       // Epoch time value
 char dates[9];                                // Date string
@@ -181,9 +181,9 @@ void Display_Main_Menu() {
    clear();
    text_size(LARGE);
    cursor(0, 0);
-   oledprint("CONNOR");
+   oledprint("Gabby");
    cursor(0,1);
-   oledprint("BAIN, TW");
+   oledprint("Anton");
 }
 
 void Display_Private_SumStats(unsigned int *y) {
