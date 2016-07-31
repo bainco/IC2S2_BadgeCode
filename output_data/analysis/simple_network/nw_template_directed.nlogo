@@ -10,6 +10,7 @@ breed [ server-badges server-badge ]
 
 to setup
   ca
+
   ask patches [ set pcolor white ]
 
   load-data-file
@@ -78,10 +79,10 @@ to load-data-file
 
     ask part-badges with [ badgeID = readIDa ] [
 
-      ifelse not (link-with one-of turtles with [ badgeID = readIDb ] = nobody) [
-        ask link-with one-of turtles with [ badgeID = readIDb ] [set frequency frequency + 1 ]
+      ifelse not (out-link-to one-of turtles with [ badgeID = readIDb ] = nobody) [
+        ask out-link-to one-of turtles with [ badgeID = readIDb ] [set frequency frequency + 1 ]
       ] [
-      create-link-with one-of turtles with [ badgeID = readIDb ] [ set frequency 1 ]
+      create-link-to one-of turtles with [ badgeID = readIDb ] [ set frequency 1 ]
       ]
     ]
   ];while not at end
